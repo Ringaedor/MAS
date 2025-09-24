@@ -1,0 +1,692 @@
+{{ header }}{{ column_left }}
+
+<div id="content">
+  <div class="page-header pb-0 mb-0">
+    <div class="container-fluid">
+      <div class="float-end">
+        <a href="{{ back }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> {{ button_back }}</a>
+        <a href="{{ builder }}" class="btn btn-primary"><i class="fas fa-magic"></i> {{ text_segment_builder }}</a>
+        <a href="{{ add }}" class="btn btn-success"><i class="fas fa-plus"></i> {{ button_add }}</a>
+      </div>
+      <h1>{{ text_ai_insights }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="container-fluid ai-insights-container pb-0">
+    {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> {{ error }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check"></i> {{ success }}</div>
+    {% endif %}
+
+    <!-- AI Status Cards -->
+    <div class="row mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-gradient-primary text-dark text-center mb-2 shadow-sm">
+          <div class="card-body py-3">
+            <i class="fas fa-brain fa-2x mb-2"></i>
+            <div class="fs-2 fw-bold" id="ai-suggestions-count">{{ ai_suggestions|length }}</div>
+            <div>{{ text_ai_suggestions|default('AI Suggestions') }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-gradient-success text-dark text-center mb-2 shadow-sm">
+          <div class="card-body py-3">
+            <i class="fas fa-check-circle fa-2x mb-2"></i>
+            <div class="fs-2 fw-bold" id="accepted-suggestions">0</div>
+            <div>{{ text_accepted|default('Accepted') }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-gradient-info text-dark text-center mb-2 shadow-sm">
+          <div class="card-body py-3">
+            <i class="fas fa-cogs fa-2x mb-2"></i>
+            <div class="fs-2 fw-bold" id="ai-status">{{ text_online }}</div>
+            <div>{{ text_ai_status|default('AI Status') }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-gradient-warning text-dark text-center mb-2 shadow-sm">
+          <div class="card-body py-3">
+            <i class="fas fa-chart-line fa-2x mb-2"></i>
+            <div class="fs-2 fw-bold" id="ai-confidence">85%</div>
+            <div>{{ text_avg_confidence|default('Avg Confidence') }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row gx-4 gy-3">
+      <!-- AI Generation Panel -->
+      <div class="col-xl-4 col-lg-5">
+        <div class="card shadow-sm mb-4 sticky-top" style="top: 90px;">
+          <div class="card-header bg-primary text-dark">
+            <h5 class="mb-0"><i class="fas fa-robot"></i> {{ text_ai_assistant }}</h5>
+          </div>
+          <div class="card-body">
+            <form id="ai-generation-form">
+              <div class="mb-3">
+                <label class="form-label fw-bold">{{ text_business_goal }} <span class="text-danger">*</span></label>
+                <select class="form-select" name="goal" required>
+                  <option value="">{{ text_select_goal|default('Select business goal') }}</option>
+                  {% for key, label in business_goals %}
+                  <option value="{{ key }}">{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">{{ text_business_type }}</label>
+                <select class="form-select" name="business_type">
+                  {% for key, label in business_types %}
+                  <option value="{{ key }}">{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">{{ text_context }}</label>
+                <textarea class="form-control" name="context" rows="4" placeholder="{{ placeholder_ai_context }}"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">{{ text_target_size|default('Target Size') }}</label>
+                <select class="form-select" name="target_size">
+                  <option value="small">{{ text_small|default('Small (< 1000)') }}</option>
+                  <option value="medium" selected>{{ text_medium|default('Medium (1k-10k)') }}</option>
+                  <option value="large">{{ text_large|default('Large (> 10k)') }}</option>
+                </select>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary" id="generate-ai-btn">
+                  <i class="fas fa-magic"></i> {{ text_generate_insights }}
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="clear-ai-form">
+                  <i class="fas fa-times"></i> {{ text_clear_form|default('Clear Form') }}
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="card-footer">
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">{{ text_ai_powered|default('Powered by AI') }}</small>
+              <div class="spinner-border spinner-border-sm text-primary d-none" id="ai-loading"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Results & History -->
+      <div class="col-xl-8 col-lg-7">
+        <!-- Tabs for different AI views -->
+        <ul class="nav nav-tabs mb-3" id="aiTabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="suggestions-tab" data-bs-toggle="tab" href="#suggestions-pane" role="tab">
+              <i class="fas fa-lightbulb"></i> {{ text_suggestions|default('Suggestions') }}
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="history-tab" data-bs-toggle="tab" href="#history-pane" role="tab">
+              <i class="fas fa-history"></i> {{ text_history|default('History') }}
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="analytics-tab" data-bs-toggle="tab" href="#analytics-pane" role="tab">
+              <i class="fas fa-chart-bar"></i> {{ text_analytics }}
+            </a>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="aiTabsContent">
+          <!-- Suggestions Tab -->
+          <div class="tab-pane fade show active" id="suggestions-pane" role="tabpanel">
+            <div class="card shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-lightbulb"></i> {{ text_recent_suggestions|default('Recent AI Suggestions') }}</span>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="refresh-suggestions">
+                  <i class="fas fa-sync"></i> {{ text_refresh }}
+                </button>
+              </div>
+              <div class="card-body p-0">
+                <div id="ai-suggestions-list">
+                  {% if ai_suggestions %}
+                    {% for suggestion in ai_suggestions %}
+                    <div class="ai-suggestion-item border-bottom p-3" data-suggestion-id="{{ suggestion.suggestion_id }}">
+                      <div class="row">
+                        <div class="col-md-8">
+                          <h6 class="mb-1">{{ suggestion.name }}</h6>
+                          <p class="text-muted small mb-2">{{ suggestion.description }}</p>
+                          <div class="d-flex gap-2 flex-wrap">
+                            <span class="badge bg-primary">{{ suggestion.goal }}</span>
+                            <span class="badge bg-secondary">{{ suggestion.business_type }}</span>
+                            <span class="badge bg-success">{{ (suggestion.confidence * 100)|round }}% {{ text_confidence|default('confidence') }}</span>
+                          </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                          <div class="btn-group-vertical btn-group-sm w-100">
+                            <button type="button" class="btn btn-outline-primary preview-suggestion-btn" data-suggestion-id="{{ suggestion.suggestion_id }}">
+                              <i class="fas fa-eye"></i> {{ text_preview }}
+                            </button>
+                            <button type="button" class="btn btn-success accept-suggestion-btn" data-suggestion-id="{{ suggestion.suggestion_id }}">
+                              <i class="fas fa-check"></i> {{ text_accept_suggestion }}
+                            </button>
+                            <button type="button" class="btn btn-outline-danger reject-suggestion-btn" data-suggestion-id="{{ suggestion.suggestion_id }}">
+                              <i class="fas fa-times"></i> {{ text_reject|default('Reject') }}
+                            </button>
+                          </div>
+                          <small class="text-muted d-block mt-1">{{ suggestion.created_at|date('d/m/Y H:i') }}</small>
+                        </div>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="text-center py-5">
+                      <i class="fas fa-robot fa-3x text-muted mb-3"></i>
+                      <h5>{{ text_no_ai_suggestions }}</h5>
+                      <p class="text-muted">{{ text_generate_first_suggestion|default('Generate your first AI suggestion using the form on the left') }}</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- History Tab -->
+          <div class="tab-pane fade" id="history-pane" role="tabpanel">
+            <div class="card shadow-sm">
+              <div class="card-header">
+                <span><i class="fas fa-history"></i> {{ text_generation_history|default('Generation History') }}</span>
+              </div>
+              <div class="card-body">
+                <div class="timeline" id="ai-history-timeline">
+                  <!-- Timeline items will be populated via AJAX -->
+                  <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <div class="text-muted">{{ text_loading_history|default('Loading history...') }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Analytics Tab -->
+          <div class="tab-pane fade" id="analytics-pane" role="tabpanel">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card shadow-sm mb-3">
+                  <div class="card-header">
+                    <span><i class="fas fa-chart-pie"></i> {{ text_success_rate|default('Success Rate') }}</span>
+                  </div>
+                  <div class="card-body text-center">
+                    <div class="circular-progress" data-percentage="78">
+                      <div class="inner-circle">78%</div>
+                    </div>
+                    <p class="text-muted mt-2">{{ text_suggestions_accepted|default('Suggestions Accepted') }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card shadow-sm mb-3">
+                  <div class="card-header">
+                    <span><i class="fas fa-target"></i> {{ text_top_goals|default('Top Goals') }}</span>
+                  </div>
+                  <div class="card-body">
+                    <div class="goal-stats">
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>{{ text_reduce_churn }}</span>
+                        <span class="badge bg-primary">35%</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>{{ text_increase_engagement }}</span>
+                        <span class="badge bg-info">28%</span>
+                      </div>
+                      <div class="d-flex justify-content-between">
+                        <span>{{ text_optimize_marketing }}</span>
+                        <span class="badge bg-success">22%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card shadow-sm">
+              <div class="card-header">
+                <span><i class="fas fa-chart-line"></i> {{ text_performance_trends|default('Performance Trends') }}</span>
+              </div>
+              <div class="card-body">
+                <canvas id="ai-performance-chart" width="400" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Suggestion Preview Modal -->
+<div class="modal fade" id="suggestionPreviewModal" tabindex="-1" aria-labelledby="suggestionPreviewLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="suggestionPreviewLabel">{{ text_suggestion_preview|default('Suggestion Preview') }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="suggestion-preview-content">
+          <div class="text-center py-3">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ button_cancel }}</button>
+        <button type="button" class="btn btn-success" id="accept-from-preview">
+          <i class="fas fa-check"></i> {{ text_accept_suggestion }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalLabel">{{ text_confirm_action|default('Confirm Action') }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="confirm-message"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ button_cancel }}</button>
+        <button type="button" class="btn btn-primary" id="confirm-action">{{ button_ok }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.ai-suggestion-item:hover {
+  background-color: #f8f9fa;
+}
+.circular-progress {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: conic-gradient(#007bff 0deg 281deg, #e9ecef 281deg 360deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+.inner-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+.timeline {
+  position: relative;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #dee2e6;
+}
+.timeline-item {
+  position: relative;
+  padding-left: 50px;
+  margin-bottom: 20px;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #007bff;
+}
+</style>
+
+<script>
+(function(){
+  let currentSuggestionId = null;
+
+  // AI Generation Form
+  $('#ai-generation-form').on('submit', function(e) {
+    e.preventDefault();
+    $('#generate-ai-btn').prop('disabled', true);
+    $('#ai-loading').removeClass('d-none');
+
+    $.ajax({
+      url: '{{ ajax_generate_insights }}',
+      type: 'POST',
+      data: $(this).serialize(),
+      dataType: 'json',
+      success: function(res) {
+        $('#generate-ai-btn').prop('disabled', false);
+        $('#ai-loading').addClass('d-none');
+        
+        if(res.success && res.suggestions) {
+          updateSuggestionsList(res.suggestions);
+          updateAiStats();
+          showNotification('{{ text_suggestions_generated|default("New suggestions generated!") }}', 'success');
+        } else {
+          showNotification(res.error || '{{ text_generation_error|default("Error generating suggestions") }}', 'danger');
+        }
+      },
+      error: function() {
+        $('#generate-ai-btn').prop('disabled', false);
+        $('#ai-loading').addClass('d-none');
+        showNotification('{{ text_ajax_error|default("AJAX error") }}', 'danger');
+      }
+    });
+  });
+
+  // Clear AI Form
+  $('#clear-ai-form').on('click', function() {
+    $('#ai-generation-form')[0].reset();
+  });
+
+  // Preview Suggestion
+  $(document).on('click', '.preview-suggestion-btn', function() {
+    const suggestionId = $(this).data('suggestion-id');
+    currentSuggestionId = suggestionId;
+    
+    $('#suggestion-preview-content').html('<div class="text-center py-3"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
+    $('#suggestionPreviewModal').modal('show');
+
+    $.ajax({
+      url: '{{ ajax_preview_suggestion|default("extension/mas/segments/preview_suggestion") }}',
+      type: 'POST',
+      data: { suggestion_id: suggestionId },
+      dataType: 'json',
+      success: function(res) {
+        if(res.success) {
+          let html = `
+            <h6>${res.suggestion.name}</h6>
+            <p class="text-muted">${res.suggestion.description}</p>
+            <h6>{{ text_filters|default("Filters") }}:</h6>
+            <div class="row">`;
+          
+          res.suggestion.filters.forEach(filter => {
+            html += `
+              <div class="col-md-6 mb-2">
+                <div class="card border">
+                  <div class="card-body p-2">
+                    <strong>${filter.name}</strong><br>
+                    <small class="text-muted">${filter.type}: ${filter.value}</small>
+                  </div>
+                </div>
+              </div>`;
+          });
+          
+          html += `</div>
+            <div class="mt-3">
+              <div class="row text-center">
+                <div class="col-4">
+                  <div class="bg-light p-2 rounded">
+                    <strong>${res.preview.estimated_count}</strong><br>
+                    <small>{{ text_estimated_customers }}</small>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="bg-light p-2 rounded">
+                    <strong>${res.preview.complexity}</strong><br>
+                    <small>{{ text_complexity }}</small>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="bg-light p-2 rounded">
+                    <strong>${Math.round(res.suggestion.confidence * 100)}%</strong><br>
+                    <small>{{ text_confidence }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+          
+          $('#suggestion-preview-content').html(html);
+        } else {
+          $('#suggestion-preview-content').html(`<div class="text-danger">${res.error}</div>`);
+        }
+      },
+      error: function() {
+        $('#suggestion-preview-content').html('<div class="text-danger">{{ text_preview_error }}</div>');
+      }
+    });
+  });
+
+  // Accept Suggestion
+  $(document).on('click', '.accept-suggestion-btn, #accept-from-preview', function() {
+    const suggestionId = $(this).data('suggestion-id') || currentSuggestionId;
+    
+    $('#confirm-message').text('{{ text_confirm_accept_suggestion|default("Are you sure you want to accept this suggestion and create a new segment?") }}');
+    $('#confirmModal').modal('show');
+    
+    $('#confirm-action').off('click').on('click', function() {
+      $('#confirmModal').modal('hide');
+      acceptSuggestion(suggestionId);
+    });
+  });
+
+  function acceptSuggestion(suggestionId) {
+    $.ajax({
+      url: '{{ ajax_accept_suggestion }}',
+      type: 'POST',
+      data: { suggestion_id: suggestionId },
+      dataType: 'json',
+      success: function(res) {
+        if(res.success) {
+          showNotification(res.message, 'success');
+          $(`.ai-suggestion-item[data-suggestion-id="${suggestionId}"]`).fadeOut();
+          updateAiStats();
+          if(res.redirect) {
+            setTimeout(() => window.location = res.redirect, 1500);
+          }
+        } else {
+          showNotification(res.error, 'danger');
+        }
+      },
+      error: function() {
+        showNotification('{{ text_accept_error|default("Error accepting suggestion") }}', 'danger');
+      }
+    });
+  }
+
+  // Reject Suggestion
+  $(document).on('click', '.reject-suggestion-btn', function() {
+    const suggestionId = $(this).data('suggestion-id');
+    
+    $('#confirm-message').text('{{ text_confirm_reject_suggestion|default("Are you sure you want to reject this suggestion?") }}');
+    $('#confirmModal').modal('show');
+    
+    $('#confirm-action').off('click').on('click', function() {
+      $('#confirmModal').modal('hide');
+      rejectSuggestion(suggestionId);
+    });
+  });
+
+  function rejectSuggestion(suggestionId) {
+    $.ajax({
+      url: '{{ ajax_reject_suggestion|default("extension/mas/segments/reject_suggestion") }}',
+      type: 'POST',
+      data: { suggestion_id: suggestionId },
+      dataType: 'json',
+      success: function(res) {
+        if(res.success) {
+          $(`.ai-suggestion-item[data-suggestion-id="${suggestionId}"]`).fadeOut();
+          showNotification('{{ text_suggestion_rejected|default("Suggestion rejected") }}', 'info');
+          updateAiStats();
+        } else {
+          showNotification(res.error, 'danger');
+        }
+      },
+      error: function() {
+        showNotification('{{ text_reject_error|default("Error rejecting suggestion") }}', 'danger');
+      }
+    });
+  }
+
+  // Refresh Suggestions
+  $('#refresh-suggestions').on('click', function() {
+    location.reload();
+  });
+
+  // Load History when tab is activated
+  $('#history-tab').on('shown.bs.tab', function() {
+    if($('#ai-history-timeline .timeline-item').length === 0) {
+      loadAiHistory();
+    }
+  });
+
+  function loadAiHistory() {
+    $.ajax({
+      url: '{{ ajax_get_history|default("extension/mas/segments/ai_history") }}',
+      type: 'GET',
+      dataType: 'json',
+      success: function(res) {
+        if(res.success && res.history) {
+          let html = '';
+          res.history.forEach(item => {
+            html += `
+              <div class="timeline-item">
+                <div class="card border-left-primary">
+                  <div class="card-body p-3">
+                    <h6 class="mb-1">${item.action}</h6>
+                    <p class="text-muted small mb-1">${item.description}</p>
+                    <small class="text-muted">${item.created_at}</small>
+                  </div>
+                </div>
+              </div>`;
+          });
+          $('#ai-history-timeline').html(html);
+        } else {
+          $('#ai-history-timeline').html('<div class="text-center text-muted">{{ text_no_history|default("No history available") }}</div>');
+        }
+      },
+      error: function() {
+        $('#ai-history-timeline').html('<div class="text-center text-danger">{{ text_history_error|default("Error loading history") }}</div>');
+      }
+    });
+  }
+
+  // Load Analytics when tab is activated
+  $('#analytics-tab').on('shown.bs.tab', function() {
+    if(!$('#ai-performance-chart').data('loaded')) {
+      loadAnalyticsChart();
+    }
+  });
+
+  function loadAnalyticsChart() {
+    const ctx = document.getElementById('ai-performance-chart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+          label: '{{ text_suggestions_generated|default("Suggestions Generated") }}',
+          data: [12, 19, 3, 5, 2, 3],
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1
+        }, {
+          label: '{{ text_suggestions_accepted|default("Suggestions Accepted") }}',
+          data: [8, 15, 2, 4, 1, 2],
+          borderColor: 'rgb(255, 99, 132)',
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    $('#ai-performance-chart').data('loaded', true);
+  }
+
+  function updateSuggestionsList(suggestions) {
+    if(suggestions.length === 0) return;
+    
+    let html = '';
+    suggestions.forEach(suggestion => {
+      html += `
+        <div class="ai-suggestion-item border-bottom p-3" data-suggestion-id="${suggestion.id}">
+          <div class="row">
+            <div class="col-md-8">
+              <h6 class="mb-1">${suggestion.name}</h6>
+              <p class="text-muted small mb-2">${suggestion.description}</p>
+              <div class="d-flex gap-2 flex-wrap">
+                <span class="badge bg-primary">${suggestion.goal}</span>
+                <span class="badge bg-secondary">${suggestion.business_type}</span>
+                <span class="badge bg-success">${Math.round(suggestion.confidence * 100)}% confidence</span>
+              </div>
+            </div>
+            <div class="col-md-4 text-end">
+              <div class="btn-group-vertical btn-group-sm w-100">
+                <button type="button" class="btn btn-outline-primary preview-suggestion-btn" data-suggestion-id="${suggestion.id}">
+                  <i class="fas fa-eye"></i> {{ text_preview }}
+                </button>
+                <button type="button" class="btn btn-success accept-suggestion-btn" data-suggestion-id="${suggestion.id}">
+                  <i class="fas fa-check"></i> {{ text_accept_suggestion }}
+                </button>
+                <button type="button" class="btn btn-outline-danger reject-suggestion-btn" data-suggestion-id="${suggestion.id}">
+                  <i class="fas fa-times"></i> {{ text_reject }}
+                </button>
+              </div>
+              <small class="text-muted d-block mt-1">{{ "now"|date('d/m/Y H:i') }}</small>
+            </div>
+          </div>
+        </div>`;
+    });
+    
+    $('#ai-suggestions-list').prepend(html);
+  }
+
+  function updateAiStats() {
+    const totalSuggestions = $('.ai-suggestion-item').length;
+    $('#ai-suggestions-count').text(totalSuggestions);
+  }
+
+  function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                      type === 'danger' ? 'alert-danger' : 'alert-info';
+    
+    const alert = $(`
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">
+        <i class="fas fa-${type === 'success' ? 'check' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `);
+    
+    $('body').append(alert);
+    setTimeout(() => alert.alert('close'), 5000);
+  }
+
+  // Initialize
+  updateAiStats();
+
+})();
+</script>
+
+{{ footer }}

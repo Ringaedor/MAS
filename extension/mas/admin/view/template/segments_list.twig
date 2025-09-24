@@ -1,0 +1,321 @@
+{{ header }}{{ column_left }}
+
+<div id="content">
+  <div class="page-header pb-0 mb-0">
+    <div class="container-fluid">
+      <div class="float-end">
+        <a href="{{ builder }}" class="btn btn-primary"><i class="fas fa-magic"></i> {{ text_segment_builder }}</a>
+        <a href="{{ ai_insights }}" class="btn btn-info"><i class="fas fa-brain"></i> {{ text_ai_insights }}</a>
+        <a href="{{ add }}" class="btn btn-success"><i class="fas fa-plus"></i> {{ button_add }}</a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="container-fluid pb-0">
+
+    {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> {{ error }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check"></i> {{ success }}</div>
+    {% endif %}
+
+    <div class="row mb-3">
+      <!-- KPI Cards -->
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-primary text-white text-center mb-2 shadow-sm">
+          <div class="card-body py-3">
+            <i class="fas fa-chart-pie fa-2x mb-2"></i>
+            <div class="fs-2 fw-bold">{{ total_segments }}</div>
+            <div>{{ text_total_segments }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-success text-white text-center mb-2 shadow-sm">
+          <div class="card-body py-3">
+            <i class="fas fa-users fa-2x mb-2"></i>
+            <div class="fs-2 fw-bold">{{ total_customers }}</div>
+            <div>{{ text_total_customers }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-info text-white text-center mb-2 shadow-sm">
+          <div class="card-body py-3">
+            <i class="fas fa-bolt fa-2x mb-2"></i>
+            <div class="fs-2 fw-bold" id="active-segments">{{ active_segments|default('0') }}</div>
+            <div>{{ text_active_segments|default('Active') }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card bg-warning text-dark text-center mb-2 shadow-sm">
+          <div class="card-body py-3">
+            <i class="fas fa-sync-alt fa-2x mb-2"></i>
+            <div class="fs-2 fw-bold" id="materializing-segments">0</div>
+            <div>{{ text_materializing|default('In Progress') }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Filter Panel -->
+    <form id="filter-form" method="get" class="card mas-filter-panel mb-4 border shadow-sm">
+      <input type="hidden" name="user_token" value="{{ user_token }}">
+      <div class="card-body pb-1">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label small mb-1"><i class="fas fa-search"></i> {{ text_name }}</label>
+            <input type="text" name="filter_name" value="{{ filter_name }}" placeholder="{{ placeholder_search_segments }}" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">{{ text_type }}</label>
+            <select name="filter_type" class="form-select">
+              {% for value, label in segment_types %}
+                <option value="{{ value }}"{% if value==filter_type %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">{{ text_status }}</label>
+            <select name="filter_status" class="form-select">
+              {% for value, label in statuses %}
+                <option value="{{ value }}"{% if value==filter_status %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">{{ text_from_date }}</label>
+            <input type="date" name="filter_date_from" value="{{ filter_date_from }}" class="form-control">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small mb-1">{{ text_to_date }}</label>
+            <input type="date" name="filter_date_to" value="{{ filter_date_to }}" class="form-control">
+          </div>
+          <div class="col-md-1 d-grid">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> {{ button_filter }}</button>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer py-2 bg-transparent border-0 d-flex justify-content-between align-items-center">
+        <span>
+          <button type="button" class="btn btn-link text-danger p-0" onclick="document.getElementById('filter-form').reset(); document.getElementById('filter-form').submit();"><i class="fas fa-times"></i> {{ text_clear_filters }}</button>
+        </span>
+        <span class="small text-muted">
+          {{ text_pagination_info|replace({'{start}': ((filter_status and segments|length) ? ((filter_status-1)*limit + 1) : '1'), '{end}': ((filter_status and segments|length) ? ((filter_status-1)*limit + segments|length) : segments|length), '{total}': total_segments }) }}
+        </span>
+      </div>
+    </form>
+
+    <!-- Tabs: List / Grid / Advanced -->
+    <ul class="nav nav-tabs mb-3 mas-segments-tabs" id="segmentsTabs" role="tablist">
+      <li class="nav-item"><a class="nav-link active" id="list-tab" data-bs-toggle="tab" href="#list-pane" role="tab"><i class="fas fa-list"></i> {{ tab_list }}</a></li>
+      <li class="nav-item"><a class="nav-link" id="grid-tab" data-bs-toggle="tab" href="#grid-pane" role="tab"><i class="fas fa-th"></i> {{ text_grid_view|default('Grid') }}</a></li>
+      <li class="nav-item"><a class="nav-link" id="analytics-tab" data-bs-toggle="tab" href="#analytics-pane" role="tab"><i class="fas fa-chart-line"></i> {{ text_analytics|default('Analytics') }}</a></li>
+    </ul>
+
+    <div class="tab-content" id="segmentsTabsContent">
+      <!-- TABLE VIEW -->
+      <div class="tab-pane fade show active" id="list-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <div><i class="fas fa-list"></i> <b>{{ text_segments_found }}</b>: <span class="badge bg-primary">{{ segments|length }}</span></div>
+            <div id="mas-bulk-group" class="input-group input-group-sm w-auto" style="display:none;">
+              <select id="bulk-action-select" class="form-select form-select-sm">
+                <option value="">{{ text_select_action|default('Select Action') }}</option>
+                <option value="enable">{{ button_enable }}</option>
+                <option value="disable">{{ button_disable }}</option>
+                <option value="materialize">{{ button_materialize }}</option>
+                <option value="delete">{{ button_delete }}</option>
+              </select>
+              <button type="button" class="btn btn-secondary" onclick="MASSegments.executeBulkAction()">
+                {{ button_apply }}
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            {% if segments %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 mas-segments-table">
+                <thead>
+                  <tr>
+                    <th width="1" class="text-center">
+                      <input class="form-check-input" type="checkbox" id="select-all">
+                    </th>
+                    <th>{{ text_name }}</th>
+                    <th width="100">{{ text_type }}</th>
+                    <th width="80">{{ text_status }}</th>
+                    <th width="110" class="text-end">{{ text_customers }}</th>
+                    <th width="140">{{ text_last_updated }}</th>
+                    <th width="160">{{ text_actions }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for segment in segments %}
+                  <tr data-segment-id="{{ segment.segment_id }}">
+                    <td class="text-center">
+                      <input class="form-check-input segment-checkbox" type="checkbox" name="selected[]" value="{{ segment.segment_id }}">
+                    </td>
+                    <td>
+                      <strong>{{ segment.name }}</strong>
+                      {% if segment.description %}
+                      <small class="text-muted d-block">{{ segment.description }}</small>
+                      {% endif %}
+                      {% if segment.status == 0 %}
+                        <span class="badge bg-secondary ms-1">{{ text_disabled }}</span>
+                      {% endif %}
+                      {% if segment.type == 'ai' %}
+                        <span class="badge bg-success ms-1">{{ text_ai_generated }}</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="badge mas-segments-badge {{ segment.type_class }}">{{ segment.type }}</span>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge {{ segment.status_class }}">{{ segment.status_label }}</span>
+                    </td>
+                    <td class="text-end">{{ segment.customer_count }}</td>
+                    <td>
+                      <div>
+                        <small class="text-muted">{{ text_date_created }}:</small> {{ segment.created_at }}<br>
+                        <small class="text-muted">{{ text_last_updated }}:</small> {{ segment.updated_at }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <a href="{{ segment.edit }}" class="btn btn-outline-primary" title="{{ button_edit }}"><i class="fas fa-edit"></i></a>
+                        <a href="{{ segment.logs }}" class="btn btn-outline-info" title="{{ text_logs }}"><i class="fas fa-list-alt"></i></a>
+                        <button type="button" class="btn btn-outline-success materialize-btn" data-id="{{ segment.segment_id }}" title="{{ button_materialize }}"><i class="fas fa-play"></i></button>
+                        <button type="button" class="btn btn-outline-secondary duplicate-btn" data-id="{{ segment.segment_id }}" title="{{ button_duplicate }}"><i class="fas fa-copy"></i></button>
+                        <button type="button" class="btn btn-outline-danger delete-btn" data-id="{{ segment.segment_id }}" title="{{ button_delete }}"><i class="fas fa-trash"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+              <div class="mas-segments-empty-state my-5 text-center">
+                <i class="fas fa-chart-pie fa-4x mb-3"></i>
+                <h4>{{ text_no_segments }}</h4>
+                <p class="text-muted">{{ text_no_segments_description|default('Clicca su "Crea segmento" o "Builder" per iniziare') }}</p>
+              </div>
+            {% endif %}
+          </div>
+          {% if pagination %}
+          <div class="card-footer d-flex justify-content-end pt-2 pb-1">
+            {{ pagination }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- GRID VIEW -->
+      <div class="tab-pane fade" id="grid-pane" role="tabpanel">
+        <div class="row mas-segments-grid mb-3">
+          {% for segment in segments %}
+          <div class="col-xl-4 col-lg-6 col-12 pb-3">
+            <div class="mas-segment-card h-100 d-flex flex-column border shadow-sm position-relative" data-segment-id="{{ segment.segment_id }}">
+              <div class="card-header d-flex justify-content-between align-items-start">
+                <div>
+                  <span class="badge {{ segment.type_class }} me-1">{{ segment.type }}</span>
+                  <span class="badge {{ segment.status_class }}">{{ segment.status_label }}</span>
+                </div>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-light border" data-bs-toggle="dropdown"><i class="fas fa-ellipsis-v"></i></button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ segment.edit }}"><i class="fas fa-edit"></i> {{ button_edit }}</a></li>
+                    <li><a class="dropdown-item materialize-btn" data-id="{{ segment.segment_id }}"><i class="fas fa-play"></i> {{ button_materialize }}</a></li>
+                    <li><a class="dropdown-item" href="{{ segment.logs }}"><i class="fas fa-list-alt"></i> {{ text_logs }}</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item duplicate-btn" data-id="{{ segment.segment_id }}"><i class="fas fa-copy"></i> {{ button_duplicate }}</a></li>
+                    <li><a class="dropdown-item text-danger delete-btn" data-id="{{ segment.segment_id }}"><i class="fas fa-trash"></i> {{ button_delete }}</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="card-body">
+                <h5>{{ segment.name }}</h5>
+                <p class="text-muted">{{ segment.description|default('') }}</p>
+                <div class="row mt-2 text-center">
+                  <div class="col-6 border-end">
+                    <div class="fw-bold fs-5">{{ segment.customer_count }}</div>
+                    <div class="small text-muted">{{ text_customers }}</div>
+                  </div>
+                  <div class="col-6">
+                    <div class="fw-bold fs-6">{{ segment.last_materialization }}</div>
+                    <div class="small text-muted">{{ text_date_last_materialization }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <small class="text-muted">{{ text_date_created }}: {{ segment.created_at }}</small>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ANALYTICS PANE -->
+      <div class="tab-pane fade" id="analytics-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-body py-4 text-center text-muted">
+            <i class="fas fa-chart-line fa-2x mb-3"></i>
+            <div class="mb-2">{{ text_coming_soon|default('Componente analytics avanzate in arrivo') }}</div>
+            <div class="small">Dashboard, trend, KPI avanzati per ogni segmento...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Bulk select logic
+  function updateBulkGroup() {
+    var selected = $('.segment-checkbox:checked').length;
+    if (selected > 0)
+      $('#mas-bulk-group').show();
+    else
+      $('#mas-bulk-group').hide();
+  }
+  $('#select-all').on('change', function(){
+    $('.segment-checkbox').prop('checked', $(this).is(':checked'));
+    updateBulkGroup();
+  });
+  $('.segment-checkbox').on('change', function(){
+    updateBulkGroup();
+    $('#select-all').prop('checked', $('.segment-checkbox:checked').length === $('.segment-checkbox').length);
+  });
+  $(document).on('click', '.delete-btn', function() {
+    var segid = $(this).data('id');
+    if(confirm('{{ text_confirm_delete }}')) {
+      window.location = '{{ delete }}&segment_id=' + segid;
+    }
+  });
+  $(document).on('click', '.materialize-btn', function() {
+    // call AJAX endpoint -- implement in JS class MASSegments
+  });
+  $(document).on('click', '.duplicate-btn', function() {
+    // call AJAX endpoint -- implement in JS class MASSegments
+  });
+
+  // Tabs logic
+  $('#segmentsTabs a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+    // Persist view/tab selection if needed (localStorage)
+  });
+
+  // TODO: implement all further interactive logic via enterprise MAS JS
+})();
+</script>
+
+{{ footer }}

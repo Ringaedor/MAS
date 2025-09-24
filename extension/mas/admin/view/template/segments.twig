@@ -1,0 +1,601 @@
+{{ header }}{{ column_left }}
+
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <div class="btn-group">
+          <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-plus"></i> {{ button_add }}
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{{ builder }}"><i class="fas fa-magic"></i> {{ text_segment_builder }}</a></li>
+            <li><a class="dropdown-item" href="{{ add }}"><i class="fas fa-plus-circle"></i> {{ text_manual_create }}</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ ai_insights }}"><i class="fas fa-brain"></i> {{ text_ai_insights }}</a></li>
+          </ul>
+        </div>
+        <a href="{{ back }}" class="btn btn-outline-secondary">
+          <i class="fas fa-arrow-left"></i> {{ button_back }}
+        </a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    
+    {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endif %}
+
+    {% if success %}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> {{ success }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endif %}
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+      <div class="col-lg-3 col-md-6">
+        <div class="card bg-primary text-white">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h3 class="mb-0">{{ total_segments }}</h3>
+                <p class="mb-0">{{ text_total_segments }}</p>
+              </div>
+              <div class="align-self-center">
+                <i class="fas fa-chart-pie fa-2x opacity-75"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="card bg-success text-white">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h3 class="mb-0">{{ total_customers }}</h3>
+                <p class="mb-0">{{ text_total_customers }}</p>
+              </div>
+              <div class="align-self-center">
+                <i class="fas fa-users fa-2x opacity-75"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="card bg-info text-white">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h3 class="mb-0" id="active-segments">{{ active_segments|default('0') }}</h3>
+                <p class="mb-0">{{ text_active_segments|default('Active Segments') }}</p>
+              </div>
+              <div class="align-self-center">
+                <i class="fas fa-play-circle fa-2x opacity-75"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="card bg-warning text-white">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h3 class="mb-0" id="materialization-queue">0</h3>
+                <p class="mb-0">{{ text_materializing|default('In Progress') }}</p>
+              </div>
+              <div class="align-self-center">
+                <i class="fas fa-cog fa-spin fa-2x opacity-75"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="mas-segments-tabs">
+      <ul class="nav nav-tabs" id="segments-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-pane" type="button" role="tab">
+            <i class="fas fa-list"></i> {{ tab_list }}
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="builder-tab" data-bs-toggle="tab" data-bs-target="#builder-pane" type="button" role="tab">
+            <i class="fas fa-magic"></i> {{ tab_builder }}
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai-pane" type="button" role="tab">
+            <i class="fas fa-brain"></i> {{ tab_ai }}
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs-pane" type="button" role="tab">
+            <i class="fas fa-clipboard-list"></i> {{ tab_logs }}
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="segments-tab-content">
+      
+      <!-- Segments List Tab -->
+      <div class="tab-pane fade show active" id="list-pane" role="tabpanel" aria-labelledby="list-tab">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-filter"></i> {{ text_filter_segments|default('Filter Segments') }}
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+                <i class="fas fa-times"></i> {{ text_clear_filters }}
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <form id="filter-form" class="mas-filter-panel">
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label class="form-label">{{ text_name }}</label>
+                  <input type="text" name="filter_name" value="{{ filter_name }}" placeholder="{{ placeholder_search_segments }}" class="form-control">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">{{ text_type }}</label>
+                  <select name="filter_type" class="form-select">
+                    {% for value, text in segment_types %}
+                      <option value="{{ value }}"{% if value == filter_type %} selected{% endif %}>{{ text }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">{{ text_status }}</label>
+                  <select name="filter_status" class="form-select">
+                    {% for value, text in statuses %}
+                      <option value="{{ value }}"{% if value == filter_status %} selected{% endif %}>{{ text }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">{{ text_from_date }}</label>
+                  <input type="date" name="filter_date_from" value="{{ filter_date_from }}" class="form-control">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">{{ text_to_date }}</label>
+                  <input type="date" name="filter_date_to" value="{{ filter_date_to }}" class="form-control">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                  <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> {{ button_filter }}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Segments Grid/Table -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <h3 class="card-title mb-0">
+                <i class="fas fa-chart-pie"></i> {{ text_segments_found }}: <span class="badge bg-primary">{{ segments|length }}</span>
+              </h3>
+              <div class="btn-group">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-view="grid" title="{{ text_grid_view|default('Grid View') }}">
+                  <i class="fas fa-th"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm active" data-view="table" title="{{ text_table_view|default('Table View') }}">
+                  <i class="fas fa-table"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            
+            {% if segments %}
+              <!-- Grid View -->
+              <div id="segments-grid" class="mas-segments-grid" style="display: none;">
+                {% for segment in segments %}
+                  <div class="mas-segment-card" data-segment-id="{{ segment.segment_id }}">
+                    <div class="card-header">
+                      <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="segment-title mb-1">{{ segment.name }}</h5>
+                        <div class="dropdown">
+                          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ segment.edit }}"><i class="fas fa-edit"></i> {{ button_edit }}</a></li>
+                            <li><a class="dropdown-item materialize-btn" data-id="{{ segment.segment_id }}"><i class="fas fa-play"></i> {{ button_materialize }}</a></li>
+                            <li><a class="dropdown-item" href="{{ segment.logs }}"><i class="fas fa-list-alt"></i> {{ text_logs }}</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item duplicate-btn" data-id="{{ segment.segment_id }}"><i class="fas fa-copy"></i> {{ button_duplicate }}</a></li>
+                            <li><a class="dropdown-item text-danger delete-btn" data-id="{{ segment.segment_id }}"><i class="fas fa-trash"></i> {{ button_delete }}</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center gap-2 mt-2">
+                        <span class="badge {{ segment.type_class }}">{{ segment.type }}</span>
+                        <span class="badge {{ segment.status_class }} status-badge">{{ segment.status_label }}</span>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <p class="text-muted small mb-3">{{ segment.description|default('No description') }}</p>
+                      <div class="segment-stats">
+                        <div class="row text-center">
+                          <div class="col-4">
+                            <div class="fw-bold">{{ segment.customer_count }}</div>
+                            <div class="small text-muted">{{ text_customers }}</div>
+                          </div>
+                          <div class="col-8">
+                            <div class="fw-bold">{{ segment.last_materialization }}</div>
+                            <div class="small text-muted">{{ text_date_last_materialization }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-footer">
+                      <small class="text-muted">
+                        {{ text_date_created }}: {{ segment.created_at }}
+                      </small>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+
+              <!-- Table View -->
+              <div id="segments-table" class="mas-segments-table">
+                <form id="bulk-form" method="post">
+                  <input type="hidden" name="bulk_action" value="">
+                  <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                      <thead class="table-light">
+                        <tr>
+                          <th width="1">
+                            <div class="form-check">
+                              <input class="form-check-input" type="checkbox" id="select-all">
+                              <label class="form-check-label" for="select-all"></label>
+                            </div>
+                          </th>
+                          <th>{{ text_name }}</th>
+                          <th width="100">{{ text_type }}</th>
+                          <th width="80">{{ text_status }}</th>
+                          <th width="120">{{ text_customers }}</th>
+                          <th width="150">{{ text_last_updated }}</th>
+                          <th width="150">{{ text_actions }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for segment in segments %}
+                          <tr class="segment-row" data-segment-id="{{ segment.segment_id }}">
+                            <td>
+                              <div class="form-check">
+                                <input class="form-check-input segment-checkbox" type="checkbox" name="selected[]" value="{{ segment.segment_id }}">
+                              </div>
+                            </td>
+                            <td>
+                              <div>
+                                <strong class="segment-name">{{ segment.name }}</strong>
+                                {% if segment.description %}
+                                  <br><small class="text-muted">{{ segment.description }}</small>
+                                {% endif %}
+                              </div>
+                            </td>
+                            <td>
+                              <span class="badge mas-segments-badge {{ segment.type_class }}">{{ segment.type }}</span>
+                            </td>
+                            <td>
+                              <div class="form-check form-switch">
+                                <input class="form-check-input status-toggle" type="checkbox" 
+                                       data-id="{{ segment.segment_id }}" {{ segment.status ? 'checked' : '' }}>
+                              </div>
+                            </td>
+                            <td class="text-end">
+                              <span class="fw-bold customer-count">{{ segment.customer_count }}</span>
+                            </td>
+                            <td>
+                              <div class="small">
+                                <strong>{{ segment.updated_at }}</strong>
+                                <br><span class="text-muted">{{ segment.last_materialization }}</span>
+                              </div>
+                            </td>
+                            <td>
+                              <div class="mas-segment-actions">
+                                <a href="{{ segment.edit }}" class="btn btn-sm btn-outline-primary" title="{{ button_edit }}">
+                                  <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-success materialize-btn" data-id="{{ segment.segment_id }}" title="{{ button_materialize }}">
+                                  <i class="fas fa-play"></i>
+                                </button>
+                                <a href="{{ segment.logs }}" class="btn btn-sm btn-outline-info" title="{{ text_logs }}">
+                                  <i class="fas fa-list-alt"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-secondary duplicate-btn" data-id="{{ segment.segment_id }}" title="{{ button_duplicate }}">
+                                  <i class="fas fa-copy"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-btn" data-id="{{ segment.segment_id }}" title="{{ button_delete }}">
+                                  <i class="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Bulk Actions -->
+                  <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="bulk-actions" style="display: none;">
+                      <div class="input-group">
+                        <select class="form-select" id="bulk-action-select">
+                          <option value="">{{ text_select_action|default('Select Action') }}</option>
+                          <option value="enable">{{ button_enable }}</option>
+                          <option value="disable">{{ button_disable }}</option>
+                          <option value="materialize">{{ button_materialize }}</option>
+                          <option value="delete">{{ button_delete }}</option>
+                        </select>
+                        <button type="button" class="btn btn-secondary" onclick="executeBulkAction()">
+                          {{ button_apply }}
+                        </button>
+                      </div>
+                      <small class="text-muted ms-2">
+                        <span id="selected-count">0</span> {{ text_items_selected|default('items selected') }}
+                      </small>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-wrapper">
+                      {{ pagination }}
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+            {% else %}
+              <div class="mas-segments-empty-state">
+                <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                <h4>{{ text_no_segments }}</h4>
+                <p class="text-muted">{{ text_no_segments_description|default('Create your first segment to start targeting customers effectively.') }}</p>
+                <div class="mt-3">
+                  <a href="{{ builder }}" class="btn btn-primary me-2">
+                    <i class="fas fa-magic"></i> {{ text_segment_builder }}
+                  </a>
+                  <a href="{{ ai_insights }}" class="btn btn-outline-primary">
+                    <i class="fas fa-brain"></i> {{ text_ai_insights }}
+                  </a>
+                </div>
+              </div>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Builder Tab -->
+      <div class="tab-pane fade" id="builder-pane" role="tabpanel" aria-labelledby="builder-tab">
+        <div class="text-center py-5">
+          <i class="fas fa-magic fa-3x text-muted mb-3"></i>
+          <h4>{{ text_segment_builder }}</h4>
+          <p class="text-muted">{{ text_builder_description|default('Use our advanced drag-and-drop builder to create intelligent customer segments.') }}</p>
+          <a href="{{ builder }}" class="btn btn-primary">
+            <i class="fas fa-external-link-alt"></i> {{ button_open_builder|default('Open Builder') }}
+          </a>
+        </div>
+      </div>
+
+      <!-- AI Insights Tab -->
+      <div class="tab-pane fade" id="ai-pane" role="tabpanel" aria-labelledby="ai-tab">
+        <div class="text-center py-5">
+          <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+          <h4>{{ text_ai_insights }}</h4>
+          <p class="text-muted">{{ text_ai_description|default('Get intelligent segment suggestions powered by artificial intelligence.') }}</p>
+          <a href="{{ ai_insights }}" class="btn btn-primary">
+            <i class="fas fa-external-link-alt"></i> {{ button_open_ai|default('Open AI Insights') }}
+          </a>
+        </div>
+      </div>
+
+      <!-- Logs Tab -->
+      <div class="tab-pane fade" id="logs-pane" role="tabpanel" aria-labelledby="logs-tab">
+        <div class="text-center py-5">
+          <i class="fas fa-clipboard-list fa-3x text-info mb-3"></i>
+          <h4>{{ text_materialization_logs }}</h4>
+          <p class="text-muted">{{ text_logs_description|default('Monitor segment materialization processes and troubleshoot issues.') }}</p>
+          <a href="{{ logs }}" class="btn btn-primary">
+            <i class="fas fa-external-link-alt"></i> {{ button_view_logs|default('View Logs') }}
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">{{ text_confirm_delete|default('Confirm Delete') }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex">
+          <div class="flex-shrink-0">
+            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+          </div>
+          <div class="flex-grow-1 ms-3">
+            <p class="mb-0">{{ text_delete_warning|default('Are you sure you want to delete this segment? This action cannot be undone.') }}</p>
+            <div id="delete-dependencies" class="mt-2" style="display: none;">
+              <div class="alert alert-warning mb-0">
+                <strong>{{ text_warning|default('Warning') }}:</strong> {{ error_segment_has_dependencies }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ button_cancel|default('Cancel') }}</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete">
+          <i class="fas fa-trash"></i> {{ button_delete }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Materialization Progress Modal -->
+<div class="modal fade" id="materializationModal" tabindex="-1" aria-labelledby="materializationModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="materializationModalLabel">{{ text_materializing|default('Materializing Segment') }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="mb-3">
+          <i class="fas fa-cog fa-spin fa-3x text-primary"></i>
+        </div>
+        <h5 id="materialization-segment-name"></h5>
+        <p class="text-muted">{{ text_materialization_progress|default('Please wait while we process your segment...') }}</p>
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+        </div>
+        <div class="mt-3">
+          <small class="text-muted">{{ text_materialization_time|default('This may take a few minutes depending on segment complexity.') }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Page-specific JavaScript
+$(document).ready(function() {
+    // Initialize segments interface
+    MASSegments.init({
+        endpoints: {
+            materialize: '{{ ajax_materialize }}',
+            toggle_status: '{{ ajax_toggle_status }}',
+            duplicate: '{{ ajax_duplicate }}',
+            export: '{{ ajax_export }}'
+        },
+        userToken: '{{ user_token }}',
+        messages: {
+            confirmDelete: '{{ text_confirm_delete }}',
+            materializationStarted: '{{ text_materialization_started }}',
+            segmentDeleted: '{{ text_segment_deleted }}',
+            segmentDuplicated: '{{ text_segment_duplicated }}'
+        }
+    });
+
+    // Auto-refresh materialization status every 30 seconds
+    setInterval(function() {
+        MASSegments.refreshMaterializationStatus();
+    }, 30000);
+
+    // Load initial materialization queue count
+    MASSegments.updateQueueCount();
+});
+
+// View toggle functionality
+$('[data-view]').on('click', function() {
+    const view = $(this).data('view');
+    $('[data-view]').removeClass('active');
+    $(this).addClass('active');
+    
+    if (view === 'grid') {
+        $('#segments-table').hide();
+        $('#segments-grid').show();
+    } else {
+        $('#segments-grid').hide();
+        $('#segments-table').show();
+    }
+    
+    // Save preference
+    localStorage.setItem('mas_segments_view', view);
+});
+
+// Load saved view preference
+$(document).ready(function() {
+    const savedView = localStorage.getItem('mas_segments_view') || 'table';
+    $('[data-view="' + savedView + '"]').click();
+});
+
+// Bulk selection
+$('#select-all').on('change', function() {
+    $('.segment-checkbox').prop('checked', $(this).prop('checked'));
+    updateBulkActions();
+});
+
+$('.segment-checkbox').on('change', function() {
+    updateBulkActions();
+});
+
+function updateBulkActions() {
+    const selected = $('.segment-checkbox:checked').length;
+    const total = $('.segment-checkbox').length;
+    
+    $('#selected-count').text(selected);
+    
+    if (selected > 0) {
+        $('.bulk-actions').show();
+    } else {
+        $('.bulk-actions').hide();
+    }
+    
+    $('#select-all').prop('checked', selected === total);
+}
+
+function executeBulkAction() {
+    const action = $('#bulk-action-select').val();
+    if (!action) return;
+    
+    const selected = $('.segment-checkbox:checked').map(function() {
+        return $(this).val();
+    }).get();
+    
+    if (selected.length === 0) {
+        toastr.warning('{{ text_no_selection|default("Please select segments first") }}');
+        return;
+    }
+    
+    // Confirm dangerous actions
+    if (['delete', 'disable'].includes(action)) {
+        if (!confirm('{{ text_confirm_bulk_action|default("Are you sure you want to perform this action on selected segments?") }}')) {
+            return;
+        }
+    }
+    
+    // Execute bulk action
+    MASSegments.executeBulkAction(action, selected);
+}
+
+function clearFilters() {
+    $('#filter-form')[0].reset();
+    $('#filter-form').submit();
+}
+</script>
+
+{{ footer }}

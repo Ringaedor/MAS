@@ -1,0 +1,273 @@
+/* ===================================================================== */
+/* MAS DASHBOARD STYLES                                                  */
+/* ===================================================================== */
+
+/* KPI Cards */
+.kpi-card {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.kpi-card .card-body {
+  padding: 1.5rem 1rem;
+}
+
+.kpi-icon {
+  opacity: 0.8;
+}
+
+.kpi-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+  line-height: 1;
+}
+
+.kpi-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-change {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Chart Container */
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+.chart-container canvas {
+  border-radius: 4px;
+}
+
+/* Date Range Selector */
+.date-preset {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.date-preset.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.date-preset:hover:not(.active) {
+  background-color: #f8f9fa;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+/* System Health */
+.health-status {
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #28a745;
+}
+
+.component-status {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.component-status:last-child {
+  border-bottom: none;
+}
+
+.badge-sm {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Alerts */
+.alerts-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.alert-item {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.alert-item:hover {
+  background-color: #e9ecef;
+}
+
+.border-left {
+  border-left-width: 3px !important;
+}
+
+/* Metrics Toggle */
+.metrics-toggle {
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.metrics-toggle.active {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+/* Cards Enhancement */
+.card {
+  border: 1px solid #e3e6f0;
+  border-radius: 8px;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.2);
+}
+
+.card-header {
+  background-color: #f8f9fc;
+  border-bottom: 1px solid #e3e6f0;
+  padding: 1rem 1.25rem;
+}
+
+.card-header h5 {
+  color: #5a5c69;
+  font-weight: 600;
+}
+
+/* Table Enhancements */
+.table-sm th {
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-top: none;
+}
+
+.table-sm td {
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+/* Loading States */
+.loading {
+  position: relative;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #007bff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .kpi-card .card-body {
+    padding: 1rem 0.75rem;
+  }
+  
+  .kpi-value {
+    font-size: 1.5rem;
+  }
+  
+  .chart-container {
+    height: 250px;
+  }
+  
+  .date-preset {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .kpi-value {
+    font-size: 1.25rem;
+  }
+  
+  .chart-container {
+    height: 200px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .btn, .dropdown, #refresh-dashboard, #refresh-health {
+    display: none !important;
+  }
+  
+  .card {
+    border: 1px solid #dee2e6 !important;
+    box-shadow: none !important;
+  }
+  
+  .chart-container {
+    height: 250px;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .card-header {
+    background-color: #1a202c;
+    border-color: #4a5568;
+  }
+  
+  .kpi-label {
+    color: #a0aec0;
+  }
+  
+  .health-status {
+    background-color: #2d3748;
+  }
+  
+  .alert-item {
+    background-color: #2d3748;
+  }
+  
+  .alert-item:hover {
+    background-color: #4a5568;
+  }
+}
+
+.float-right {
+	text-align: right;
+}

@@ -1,0 +1,642 @@
+/* ====== MAS Segments Styles - segments.css ====== */
+
+/* Tabs Navigation */
+.mas-segments-tabs .nav-tabs {
+    border-bottom: 2px solid #f0f0f0;
+}
+.mas-segments-tabs .nav-link {
+    color: #495057;
+    font-weight: 500;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    transition: color 0.18s, border-color 0.2s;
+    padding: 0.75rem 2rem;
+}
+.mas-segments-tabs .nav-link.active,
+.mas-segments-tabs .nav-link:focus {
+    color: #0d6efd;
+    border-bottom: 3px solid #0d6efd;
+    background: #fff;
+}
+
+/* KPI Cards Grid */
+.card.bg-primary, .card.bg-success, .card.bg-info, .card.bg-warning, 
+.card.bg-gradient-primary, .card.bg-gradient-success, .card.bg-gradient-info, .card.bg-gradient-warning {
+    border: none;
+    box-shadow: 0 2px 14px rgba(0,0,0,.05);
+    border-radius: .5rem;
+}
+.card.bg-primary { background: linear-gradient(135deg, #0d6efd 75%, #49bfff 100%) !important; }
+.card.bg-success { background: linear-gradient(135deg, #198754 60%, #50ffb2 100%) !important; }
+.card.bg-info { background: linear-gradient(135deg, #0dcaf0 40%, #60f1f9 100%) !important; }
+.card.bg-warning { background: linear-gradient(135deg, #ffc107 40%, #ffec8a 100%) !important; }
+.card.bg-gradient-primary { background: linear-gradient(225deg, #0d6efd, #07b8ff 80%); }
+.card.bg-gradient-success { background: linear-gradient(225deg, #198754, #28e8a6 80%); }
+.card.bg-gradient-info { background: linear-gradient(225deg, #0dcaf0, #29e0fc 80%); }
+.card.bg-gradient-warning { background: linear-gradient(45deg, #ffc107 0%, #fff3cd 90%); }
+
+/* Segment List: Grid & Table View */
+.mas-segments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+.mas-segment-card {
+    background: #fff;
+    border: 1px solid #ececec;
+    border-radius: 0.5rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.mas-segment-card:hover {
+    border-color: #0d6efd39;
+    box-shadow: 0 4px 16px rgba(13,110,253,0.09);
+    transform: translateY(-2px);
+}
+.mas-segment-card .card-header {
+    border-bottom: 1px solid #f0f0f0;
+    background: #f8f9fa;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+.mas-segment-card .card-body {
+    padding: 1rem 1rem 0.5rem 1rem;
+    flex: 1;
+}
+.mas-segment-card .segment-stats {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+}
+.mas-segment-card .card-footer {
+    background: #f7f7f7;
+    border-top: 1px solid #f0f0f0;
+    padding: 0.75rem 1rem;
+    font-size: 0.95em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Table View Styling */
+.mas-segments-table table {
+    font-size: 0.97em;
+}
+.mas-segments-table .table th {
+    background: #f6f6fa;
+    font-weight: 500;
+    color: #495057;
+}
+.mas-segments-table .table td, 
+.mas-segments-table .table th {
+    vertical-align: middle !important;
+}
+
+/* Segment Status */
+.mas-segment-status {
+    font-size: 0.92em;
+    font-weight: 500;
+}
+.mas-segment-status.active {
+    color: #198754;
+}
+.mas-segment-status.inactive {
+    color: #adb5bd;
+}
+.mas-segment-status.error {
+    color: #dc3545;
+}
+.mas-segment-status.materializing {
+    color: #0dcaf0;
+}
+.mas-segment-status.warning {
+    color: #fd7e14;
+}
+
+/* Filter Panel */
+.mas-filter-panel {
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    border: 1px solid #e7e7ed;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+}
+.mas-filter-panel .form-inline .form-group {
+    margin-right: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Action Buttons */
+.mas-segment-actions .btn {
+    font-size: 0.98em;
+    padding: 0.35rem 0.75rem;
+}
+.mas-segment-actions .btn + .btn {
+    margin-left: 0.25rem;
+}
+
+/* === BUILDER SPECIFIC STYLES === */
+
+/* Builder Container */
+.builder-container {
+    background: #f8f9fa;
+    min-height: calc(100vh - 200px);
+}
+
+/* Sidebar Filters Catalog */
+.filters-catalog-list {
+    background: #f7f9fc;
+    border-radius: 0.5rem;
+}
+.filters-catalog-list::-webkit-scrollbar {
+    width: 6px;
+}
+.filters-catalog-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+.filters-catalog-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+/* Draggable Filters */
+.draggable-filter {
+    cursor: grab;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    border-radius: 4px !important;
+}
+.draggable-filter:hover {
+    background: #e3f2fd !important;
+    border-color: #2196f3 !important;
+    transform: translateY(-1px);
+}
+.draggable-filter:active {
+    cursor: grabbing;
+}
+
+/* Builder Main Area */
+.builder-main-area {
+    background: #ffffff;
+    border-radius: 0.5rem;
+}
+
+/* Drag & Drop Zone */
+.builder-dnd-area {
+    background: #fefeff;
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    position: relative;
+}
+.builder-dnd-area.bg-drag-over {
+    background: #e8f5e8 !important;
+    border-color: #28a745 !important;
+    border-style: dashed;
+}
+#no-filters-zone {
+    padding: 2rem;
+    opacity: 0.7;
+}
+
+/* Active Filters */
+.builder-active-filter {
+    margin-bottom: 1rem;
+}
+.draggable-active-filter {
+    cursor: move;
+    transition: all 0.2s ease;
+}
+.draggable-active-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.remove-filter-btn {
+    color: #dc3545 !important;
+    text-decoration: none !important;
+    font-size: 1.1em;
+    line-height: 1;
+}
+.remove-filter-btn:hover {
+    color: #c82333 !important;
+}
+
+/* Builder KPI Cards */
+.builder-main-area .card.bg-light {
+    background: #f8f9fa !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 0.5rem;
+}
+
+/* Builder Form Elements */
+.builder-main-area .form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+.builder-main-area .form-control:focus,
+.builder-main-area .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+}
+
+/* Preview Area */
+.preview-area {
+    background: #f8f9fa !important;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+}
+#builder-preview-loader {
+    color: #0d6efd;
+    padding: 2rem;
+}
+
+/* Templates Gallery */
+#template-gallery .card {
+    transition: all 0.2s ease;
+}
+#template-gallery .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* === AI INSIGHTS SPECIFIC STYLES === */
+
+/* AI Container */
+.ai-insights-container {
+    background: #f8f9fa;
+    min-height: calc(100vh - 200px);
+}
+
+/* AI Generation Panel */
+#ai-generation-form .form-label {
+    font-weight: 500;
+    color: #495057;
+}
+#ai-generation-form .form-control,
+#ai-generation-form .form-select {
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+}
+#ai-generation-form .form-control:focus,
+#ai-generation-form .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+}
+
+/* AI Status Indicators */
+#ai-loading {
+    color: #0d6efd;
+}
+
+/* AI Suggestions List */
+.ai-suggestion-item {
+    transition: background-color 0.2s ease;
+    border-left: 4px solid transparent;
+}
+.ai-suggestion-item:hover {
+    background-color: #f8f9fa !important;
+    border-left-color: #0d6efd;
+}
+.ai-suggestion-item .badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* AI Tabs */
+#aiTabs .nav-link {
+    color: #495057;
+    font-weight: 500;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    transition: color 0.18s, border-color 0.2s;
+    padding: 0.75rem 1.5rem;
+}
+#aiTabs .nav-link.active {
+    color: #0d6efd;
+    border-bottom: 3px solid #0d6efd;
+    background: #fff;
+}
+
+/* AI Analytics */
+.circular-progress {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(#0d6efd 0deg 281deg, #e9ecef 281deg 360deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+.inner-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -1.5rem;
+    top: 0.5rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #0d6efd;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #dee2e6;
+}
+
+/* Goal Stats */
+.goal-stats .badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    min-width: 3rem;
+}
+
+/* Builder Drag & Drop */
+.mas-builder-workspace {
+    border: 2px dashed #b6c3e6;
+    border-radius: 0.4rem;
+    padding: 2rem 1.25rem;
+    min-height: 120px;
+    background: #f3f6fb;
+    transition: background 0.2s, border-color 0.2s;
+    margin-bottom: 1rem;
+}
+.mas-builder-workspace.dragging {
+    border-color: #0d6efd;
+    background: #e8f0fd;
+}
+
+.mas-filter-chip {
+    display: inline-block;
+    background: #e9f4fa;
+    color: #05668d;
+    border-radius: 16px;
+    padding: 0.25rem 0.75rem;
+    margin: 0.15rem 0.4rem 0.15rem 0;
+    font-size: 0.93em;
+    font-weight: 500;
+    border: 1px solid #b0dae7;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.mas-filter-chip:hover {
+    background: #d1eff9;
+    color: #124e78;
+}
+.mas-filter-chip .remove {
+    margin-left: 0.5rem;
+    font-size: 1em;
+    color: #b81d1d;
+    cursor: pointer;
+}
+
+/* AI Suggestions */
+.mas-ai-panel {
+    background: #f4f8fb;
+    border-radius: 0.5rem;
+    border: 1px solid #e8f2fa;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.mas-ai-panel .ai-quick-action {
+    margin: 0 0.2rem 0.8rem 0;
+}
+
+.mas-ai-chat-history {
+    max-height: 220px;
+    overflow-y: auto;
+    background: #f8fafd;
+    border-radius: 0.4rem;
+    margin-bottom: 8px;
+    padding: 0.65rem 1rem;
+    font-size: 0.98em;
+    border: 1px solid #e7edf4;
+}
+.mas-ai-message {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.9rem;
+}
+.mas-ai-avatar {
+    background: #0d6efd22;
+    color: #0d6efd;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.08rem;
+    margin-right: 0.9rem;
+}
+.mas-ai-content {
+    background: #fff;
+    border-radius: 1.1rem;
+    padding: 0.7rem 1.2rem 0.7rem 1rem;
+    border: 1px solid #e6ecf4;
+    box-shadow: 0 1px 3px rgba(13,110,253,0.03);
+    max-width: 80%;
+    word-break: break-word;
+}
+.mas-ai-panel .input-group input {
+    background: #f7fafd;
+    border: 1px solid #dde7fa;
+    color: #184185;
+}
+
+/* Materialization Logs */
+.mas-logs-table .table th, 
+.mas-logs-table .table td {
+    font-size: 0.97em;
+    padding: 0.6rem 0.5rem;
+    vertical-align: middle;
+}
+
+.mas-materialization-status {
+    font-weight: 600;
+    font-size: 1em;
+    padding: 0.22em 0.75em;
+    border-radius: 12px;
+    margin-right: 0.3em;
+    display: inline-block;
+}
+.mas-materialization-status.success {
+    background: #d1f9e5;
+    color: #198754;
+}
+.mas-materialization-status.failed {
+    background: #fdd6db;
+    color: #dc3545;
+}
+.mas-materialization-status.running {
+    background: #d7ebfa;
+    color: #0d6efd;
+}
+.mas-materialization-status.cancelled {
+    background: #fbcf89;
+    color: #fd7e14;
+}
+
+/* Bulk Actions */
+#mas-bulk-group {
+    transition: opacity 0.2s ease;
+}
+
+/* Notifications */
+.alert.position-fixed {
+    max-width: 400px;
+    z-index: 9999;
+}
+
+/* Form Validation States */
+.is-invalid {
+    border-color: #dc3545;
+}
+.is-valid {
+    border-color: #198754;
+}
+
+/* Loading States */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .mas-segments-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .sticky-top {
+        position: static !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .mas-segments-grid {
+        grid-template-columns: 1fr;
+    }
+    .mas-filter-panel {
+        padding: 1rem 0.7rem;
+    }
+    .builder-container .col-xl-3 {
+        order: 2;
+        margin-top: 1rem;
+    }
+    .builder-container .col-xl-9 {
+        order: 1;
+    }
+    .mas-segments-tabs .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .mas-feature-list {
+        font-size: 0.9em;
+    }
+    .mas-ai-panel {
+        padding: 0.75rem 0.5rem;
+    }
+    .mas-segment-card .card-header,
+    .mas-segment-card .card-footer {
+        padding: 0.65rem;
+    }
+    .filters-catalog-list {
+        height: auto !important;
+        max-height: 300px;
+    }
+    .timeline {
+        padding-left: 1rem;
+    }
+    .timeline::before {
+        left: 0.5rem;
+    }
+    .timeline-item::before {
+        left: -0.25rem;
+    }
+}
+
+/* Utility */
+.mas-segments-badge {
+    font-size: 0.89em !important;
+    padding: 0.2em 0.76em !important;
+    border-radius: 12px;
+}
+
+.mas-divider {
+    border-top: 1px solid #e2e8f0;
+    margin: 1rem 0;
+}
+
+.mas-tooltip {
+    border-bottom: 1px dotted #6c757d;
+    cursor: help;
+}
+
+.mas-segments-empty-state {
+    text-align: center;
+    color: #b8bbc2;
+    font-size: 1.12em;
+    margin: 2.5rem 0;
+}
+
+.mas-btn-spinner {
+    vertical-align: sub;
+    margin-left: 0.4rem;
+    font-size: 1em;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .mas-filter-panel {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+    .builder-dnd-area {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+    .mas-ai-panel {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+}

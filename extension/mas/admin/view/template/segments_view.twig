@@ -1,0 +1,480 @@
+{{ header }}{{ column_left }}
+
+<div id="content">
+  <div class="page-header pb-0 mb-0">
+    <div class="container-fluid">
+      <div class="float-end">
+        <a href="{{ back }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> {{ button_back }}</a>
+        <a href="{{ edit }}" class="btn btn-primary"><i class="fas fa-edit"></i> {{ button_edit }}</a>
+        <a href="{{ logs }}" class="btn btn-info"><i class="fas fa-list-alt"></i> {{ text_logs }}</a>
+        <button type="button" class="btn btn-success" id="materialize-segment" data-segment-id="{{ segment.segment_id }}">
+          <i class="fas fa-play"></i> {{ button_materialize }}
+        </button>
+        <a href="{{ duplicate }}" class="btn btn-outline-warning"><i class="fas fa-copy"></i> {{ button_duplicate }}</a>
+      </div>
+      <h1>{{ segment.name }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="container-fluid segment-view-container pb-0">
+    {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> {{ error }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check"></i> {{ success }}</div>
+    {% endif %}
+
+    <!-- Segment Overview Cards -->
+    <div class="row mb-4">
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> {{ text_segment_information }}</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <table class="table table-sm table-borderless">
+                  <tr>
+                    <th width="130">{{ text_name }}:</th>
+                    <td><strong>{{ segment.name }}</strong></td>
+                  </tr>
+                  <tr>
+                    <th>{{ text_type }}:</th>
+                    <td><span class="badge {{ segment.type_class }}">{{ segment.type }}</span></td>
+                  </tr>
+                  <tr>
+                    <th>{{ text_status }}:</th>
+                    <td><span class="badge {{ segment.status_class }}">{{ segment.status_label }}</span></td>
+                  </tr>
+                  <tr>
+                    <th>{{ text_logic }}:</th>
+                    <td><span class="badge bg-info">{{ segment.logic }}</span></td>
+                  </tr>
+                </table>
+              </div>
+              <div class="col-md-6">
+                <table class="table table-sm table-borderless">
+                  <tr>
+                    <th width="130">{{ text_date_created }}:</th>
+                    <td>{{ segment.created_at }}</td>
+                  </tr>
+                  <tr>
+                    <th>{{ text_last_updated }}:</th>
+                    <td>{{ segment.updated_at }}</td>
+                  </tr>
+                  <tr>
+                    <th>{{ text_created_by }}:</th>
+                    <td>{{ segment.created_by }}</td>
+                  </tr>
+                  <tr>
+                    <th>{{ text_customers }}:</th>
+                    <td><strong class="text-primary">{{ segment.customer_count|number_format }}</strong></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            {% if segment.description %}
+            <div class="mt-3">
+              <strong>{{ text_description }}:</strong>
+              <p class="text-muted mt-1">{{ segment.description }}</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="fas fa-chart-bar"></i> {{ text_statistics }}</h6>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="refresh-stats">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+          <div class="card-body" id="statistics-container">
+            {% if statistics %}
+            <div class="text-center mb-3">
+              <div class="fs-2 fw-bold text-success">{{ statistics.conversion_rate|default('0') }}%</div>
+              <div class="small text-muted">{{ text_conversion_rate|default('Conversion Rate') }}</div>
+            </div>
+            <div class="row text-center">
+              <div class="col-6 border-end">
+                <div class="fw-bold">{{ statistics.avg_order_value|default('0')|number_format }}</div>
+                <div class="small text-muted">{{ text_avg_order|default('Avg Order') }}</div>
+              </div>
+              <div class="col-6">
+                <div class="fw-bold">{{ statistics.total_revenue|default('0')|number_format }}</div>
+                <div class="small text-muted">{{ text_total_revenue|default('Revenue') }}</div>
+              </div>
+            </div>
+            {% else %}
+            <div class="text-center text-muted">
+              <i class="fas fa-chart-bar fa-2x mb-2"></i>
+              <div>{{ text_no_statistics|default('No statistics available') }}</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Display -->
+    {% if segment.filters %}
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="fas fa-filter"></i> {{ text_active_filters }} ({{ segment.filters|length }})</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          {% for filter in segment.filters %}
+          <div class="col-md-4 mb-2">
+            <div class="border rounded p-2 bg-light">
+              <strong>{{ filter.name }}</strong><br>
+              <small class="text-muted">{{ filter.type }}: {{ filter.value }}</small>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabs: Customers, History, Performance -->
+    <ul class="nav nav-tabs mb-3" id="segmentTabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="customers-tab" data-bs-toggle="tab" href="#customers-pane" role="tab">
+          <i class="fas fa-users"></i> {{ text_customers }} ({{ customers|length }})
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="history-tab" data-bs-toggle="tab" href="#history-pane" role="tab">
+          <i class="fas fa-history"></i> {{ text_materialization_history }}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="performance-tab" data-bs-toggle="tab" href="#performance-pane" role="tab">
+          <i class="fas fa-chart-line"></i> {{ text_performance }}
+        </a>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="segmentTabsContent">
+      <!-- Customers Tab -->
+      <div class="tab-pane fade show active" id="customers-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-users"></i> {{ text_segment_customers }}</span>
+            <button type="button" class="btn btn-sm btn-outline-success" id="export-customers">
+              <i class="fas fa-file-export"></i> {{ text_export_customers|default('Export Customers') }}
+            </button>
+          </div>
+          <div class="card-body p-0">
+            {% if customers %}
+            <div class="table-responsive">
+              <table class="table table-hover table-sm mb-0">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>{{ text_name }}</th>
+                    <th>{{ text_email }}</th>
+                    <th>{{ text_telephone }}</th>
+                    <th>{{ text_customer_group }}</th>
+                    <th>{{ text_orders }}</th>
+                    <th>{{ text_total_spent }}</th>
+                    <th>{{ text_date_added }}</th>
+                    <th>{{ text_actions }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for customer in customers %}
+                  <tr>
+                    <td>{{ customer.customer_id }}</td>
+                    <td>{{ customer.firstname }} {{ customer.lastname }}</td>
+                    <td>{{ customer.email }}</td>
+                    <td>{{ customer.telephone }}</td>
+                    <td>{{ customer.customer_group }}</td>
+                    <td>{{ customer.total_orders }}</td>
+                    <td>{{ customer.total_spent }}</td>
+                    <td>{{ customer.date_added }}</td>
+                    <td>
+                      <a href="{{ customer.view_customer }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye"></i> {{ text_view }}
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if customer_pagination %}
+            <div class="card-footer">
+              {{ customer_pagination }}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-users fa-3x text-muted mb-3"></i>
+              <h5>{{ text_no_customers|default('No customers in this segment') }}</h5>
+              <p class="text-muted">{{ text_materialize_first|default('Try materializing the segment first') }}</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- History Tab -->
+      <div class="tab-pane fade" id="history-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <span><i class="fas fa-history"></i> {{ text_materialization_history }}</span>
+          </div>
+          <div class="card-body p-0">
+            {% if materialization_history %}
+            <div class="table-responsive">
+              <table class="table table-hover table-sm mb-0">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>{{ text_status }}</th>
+                    <th>{{ text_customers }}</th>
+                    <th>{{ text_started }}</th>
+                    <th>{{ text_completed }}</th>
+                    <th>{{ text_duration }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for log in materialization_history %}
+                  <tr>
+                    <td>{{ log.log_id }}</td>
+                    <td>
+                      <span class="mas-materialization-status {{ log.status_class }}">{{ log.status_label }}</span>
+                    </td>
+                    <td>{{ log.customers_count }}</td>
+                    <td>{{ log.started_at }}</td>
+                    <td>{{ log.completed_at ?: '-' }}</td>
+                    <td>{{ log.duration ?: '-' }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="card-footer">
+              <a href="{{ logs }}" class="btn btn-sm btn-outline-info">
+                <i class="fas fa-list-alt"></i> {{ text_view_all_logs }}
+              </a>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-history fa-3x text-muted mb-3"></i>
+              <h5>{{ text_no_history|default('No materialization history') }}</h5>
+              <p class="text-muted">{{ text_no_history_description|default('This segment has not been materialized yet') }}</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Tab -->
+      <div class="tab-pane fade" id="performance-pane" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <span><i class="fas fa-chart-line"></i> {{ text_performance_analytics }}</span>
+          </div>
+          <div class="card-body">
+            {% if performance_data %}
+            <canvas id="performance-chart" width="400" height="200"></canvas>
+            {% else %}
+            <div class="text-center py-5">
+              <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+              <h5>{{ text_no_performance_data|default('No performance data available') }}</h5>
+              <p class="text-muted">{{ text_performance_description|default('Performance data will be available after materializations') }}</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Materialize segment
+  $('#materialize-segment').on('click', function() {
+    const segmentId = $(this).data('segment-id');
+    const $btn = $(this);
+    
+    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ text_materializing|default("Materializing...") }}');
+    
+    $.ajax({
+      url: '{{ ajax_materialize }}',
+      type: 'POST',
+      data: {
+        segment_id: segmentId,
+        user_token: '{{ user_token }}'
+      },
+      dataType: 'json',
+      success: function(response) {
+        if (response.success) {
+          showNotification(response.message, 'success');
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          showNotification(response.error, 'danger');
+        }
+      },
+      error: function() {
+        showNotification('{{ text_materialization_error|default("Error starting materialization") }}', 'danger');
+      },
+      complete: function() {
+        $btn.prop('disabled', false).html('<i class="fas fa-play"></i> {{ button_materialize }}');
+      }
+    });
+  });
+
+  // Refresh statistics
+  $('#refresh-stats').on('click', function() {
+    const $btn = $(this);
+    const segmentId = {{ segment.segment_id }};
+    
+    $btn.html('<i class="fas fa-spinner fa-spin"></i>');
+    
+    $.ajax({
+      url: '{{ ajax_refresh_stats }}',
+      type: 'POST',
+      data: {
+        segment_id: segmentId,
+        user_token: '{{ user_token }}'
+      },
+      dataType: 'json',
+      success: function(response) {
+        if (response.success && response.statistics) {
+          updateStatistics(response.statistics);
+          showNotification('{{ text_statistics_updated|default("Statistics updated") }}', 'success');
+        }
+      },
+      error: function() {
+        showNotification('{{ text_stats_error|default("Error updating statistics") }}', 'danger');
+      },
+      complete: function() {
+        $btn.html('<i class="fas fa-sync-alt"></i>');
+      }
+    });
+  });
+
+  // Export customers
+  $('#export-customers').on('click', function() {
+    const segmentId = {{ segment.segment_id }};
+    
+    $.ajax({
+      url: '{{ ajax_export_customers }}',
+      type: 'POST',
+      data: {
+        segment_id: segmentId,
+        format: 'csv',
+        user_token: '{{ user_token }}'
+      },
+      xhrFields: {
+        responseType: 'blob'
+      },
+      success: function(data) {
+        const blob = new Blob([data], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `segment_{{ segment.segment_id }}_customers_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showNotification('{{ text_export_started|default("Export started") }}', 'success');
+      },
+      error: function() {
+        showNotification('{{ text_export_error|default("Error exporting customers") }}', 'danger');
+      }
+    });
+  });
+
+  // Performance chart
+  {% if performance_data %}
+  function initPerformanceChart() {
+    const ctx = document.getElementById('performance-chart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ performance_data.labels|json_encode|raw }},
+        datasets: [{
+          label: '{{ text_customer_count|default("Customer Count") }}',
+          data: {{ performance_data.customer_counts|json_encode|raw }},
+          borderColor: 'rgb(13, 110, 253)',
+          backgroundColor: 'rgba(13, 110, 253, 0.1)',
+          tension: 0.1
+        }, {
+          label: '{{ text_conversion_rate|default("Conversion Rate") }}',
+          data: {{ performance_data.conversion_rates|json_encode|raw }},
+          borderColor: 'rgb(25, 135, 84)',
+          backgroundColor: 'rgba(25, 135, 84, 0.1)',
+          tension: 0.1,
+          yAxisID: 'y1'
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            grid: {
+              drawOnChartArea: false,
+            },
+          }
+        }
+      }
+    });
+  }
+
+  // Initialize chart when performance tab is shown
+  $('#performance-tab').on('shown.bs.tab', function() {
+    if (!$('#performance-chart').data('initialized')) {
+      initPerformanceChart();
+      $('#performance-chart').data('initialized', true);
+    }
+  });
+  {% endif %}
+
+  function updateStatistics(stats) {
+    // Update statistics display
+    const container = $('#statistics-container');
+    // Implementation depends on statistics structure
+  }
+
+  function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                      type === 'danger' ? 'alert-danger' : 'alert-info';
+    
+    const alert = $(`
+      <div class="alert ${alertClass} alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+        <i class="fas fa-${type === 'success' ? 'check' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'}"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `);
+    
+    $('body').append(alert);
+    setTimeout(() => alert.alert('close'), 5000);
+  }
+
+})();
+</script>
+
+{{ footer }}

@@ -1,0 +1,54 @@
+.mas-form-group {
+    margin-bottom: 18px;
+}
+.mas-form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #333;
+}
+.mas-form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e2e6ea;
+    border-radius: 5px;
+    font-size: 1em;
+    background: #f9fafb;
+    color: #333;
+    transition: border-color 0.2s;
+}
+.mas-form-control:focus {
+    border-color: #007bff;
+    outline: none;
+    background: #fff;
+}
+.mas-form-actions {
+    margin-top: 18px;
+    display: flex;
+    gap: 10px;
+}
+.mas-btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 5px;
+    background: #007bff;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.mas-btn:hover {
+    background: #0056b3;
+}
+.mas-btn-secondary {
+    background: #6c757d;
+}
+.mas-btn-secondary:hover {
+    background: #495057;
+}
+.mas-form-error {
+    color: #dc3545;
+    margin-top: 5px;
+    font-size: 0.97em;
+}

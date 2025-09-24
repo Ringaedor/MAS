@@ -1,0 +1,736 @@
+{{ header }}{{ column_left }}
+
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-end">
+        <button type="button" class="btn btn-primary" id="save-config-btn">
+          <i class="fas fa-save"></i> {{ button_save }}
+        </button>
+        <a href="{{ back }}" class="btn btn-outline-secondary">
+          <i class="fas fa-arrow-left"></i> {{ button_cancel }}
+        </a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li class="breadcrumb-item">
+            {% if breadcrumb.href %}
+              <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+            {% else %}
+              {{ breadcrumb.text }}
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    {% if error_warning %}
+      <div class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-triangle"></i> {{ error_warning }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endif %}
+    
+    {% if success %}
+      <div class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle"></i> {{ success }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header">
+        <i class="fas fa-cog"></i> {{ text_configuration }}
+      </div>
+      <div class="card-body">
+        
+        <ul class="nav nav-tabs mb-4">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#general-pane">
+              <i class="fas fa-cog"></i> {{ text_general }}
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#providers-pane">
+              <i class="fas fa-plug"></i> {{ text_providers }}
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#performance-pane">
+              <i class="fas fa-tachometer-alt"></i> {{ text_performance }}
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#security-pane">
+              <i class="fas fa-shield-alt"></i> {{ text_security }}
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#status-pane">
+              <i class="fas fa-heartbeat"></i> {{ text_system_status }}
+            </button>
+          </li>
+        </ul>
+
+        <form id="form-mas-config">
+          <input type="hidden" name="user_token" value="{{ user_token }}">
+          
+          <div class="tab-content">
+            
+            <div class="tab-pane fade show active" id="general-pane">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header"><h5>{{ text_basic_settings }}</h5></div>
+                    <div class="card-body">
+                      
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_status }}</label>
+                        <select name="module_mas_status" class="form-select">
+                          <option value="0"{% if module_mas_status == '0' %} selected{% endif %}>{{ text_disabled }}</option>
+                          <option value="1"{% if module_mas_status == '1' %} selected{% endif %}>{{ text_enabled }}</option>
+                        </select>
+                        <div class="form-text">{{ help_status }}</div>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_admin_email }}</label>
+                        <input type="email" name="module_mas_admin_email" value="{{ module_mas_admin_email }}" class="form-control">
+                        <div class="form-text">{{ help_admin_email }}</div>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_timezone }}</label>
+                        <select name="module_mas_timezone" class="form-select">
+                          {% for timezone in timezones %}
+                            <option value="{{ timezone }}"{% if module_mas_timezone == timezone %} selected{% endif %}>{{ timezone }}</option>
+                          {% endfor %}
+                        </select>
+                        <div class="form-text">{{ help_timezone }}</div>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_language }}</label>
+                        <select name="module_mas_language" class="form-select">
+                          {% for language in languages %}
+                            <option value="{{ language.code }}"{% if module_mas_language == language.code %} selected{% endif %}>{{ language.name }}</option>
+                          {% endfor %}
+                        </select>
+                        <div class="form-text">{{ help_language }}</div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header"><h5>{{ text_cache_settings }}</h5></div>
+                    <div class="card-body">
+                      
+                      <div class="mb-3">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" name="module_mas_cache_enabled" value="1"{% if module_mas_cache_enabled %} checked{% endif %}>
+                          <label class="form-check-label">{{ text_enable_cache }}</label>
+                        </div>
+                        <div class="form-text">{{ help_cache }}</div>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_cache_ttl }}</label>
+                        <div class="input-group">
+                          <input type="number" name="module_mas_cache_ttl" value="{{ module_mas_cache_ttl }}" class="form-control" min="300" max="86400">
+                          <span class="input-group-text">{{ text_seconds }}</span>
+                        </div>
+                        <div class="form-text">{{ help_cache_ttl }}</div>
+                      </div>
+
+                      <div class="mb-3">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" name="module_mas_debug" value="1"{% if module_mas_debug %} checked{% endif %}>
+                          <label class="form-check-label">{{ text_debug_mode }}</label>
+                        </div>
+                        <div class="form-text text-warning">{{ help_debug }}</div>
+                      </div>
+
+                      <button type="button" class="btn btn-outline-warning" id="flush-cache-btn">
+                        <i class="fas fa-sync-alt"></i> {{ text_flush_cache }}
+                      </button>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="providers-pane">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="card">
+                    <div class="card-header"><h5>{{ text_available_providers }}</h5></div>
+                    <div class="card-body" style="max-height:600px;overflow-y:auto;">
+                      {% if discovered_providers %}
+                        {% for type, providers in discovered_providers %}
+                          <h6>{{ type|title }} {{ text_providers }}</h6>
+                          {% for provider in providers %}
+                            <div class="border rounded p-2 mb-2">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                  <strong>{{ provider.name }}</strong><br>
+                                  <small>{{ provider.description }}</small><br>
+                                  <small class="text-info">v{{ provider.version }}</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-primary configure-provider-btn" data-provider="{{ provider|json_encode|e('html_attr') }}">
+                                  <i class="fas fa-cog"></i>
+                                </button>
+                              </div>
+                            </div>
+                          {% endfor %}
+                          <hr>
+                        {% endfor %}
+                      {% else %}
+                        <div class="text-center py-5 text-muted">
+                          {{ text_no_providers_found }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-8">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5>{{ text_configured_providers }}</h5>
+                    </div>
+                    <div class="card-body" style="max-height:600px;overflow-y:auto;">
+                      {% if provider_configurations %}
+                        {% for type, configs in provider_configurations %}
+                          <h6>{{ type|title }} {{ text_providers }}</h6>
+                          {% for name, cfg in configs %}
+                            <div class="border rounded p-3 mb-2">
+                              <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                  <strong>{{ name|title }}</strong><br>
+                                  <small>{{ type|title }} {{ text_provider }}</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                  <input class="form-check-input provider-status-toggle" type="checkbox" data-type="{{ type }}" data-name="{{ name }}"{% if cfg.enabled %} checked{% endif %}>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                  <button type="button" class="btn btn-outline-primary test-provider-btn" data-type="{{ type }}" data-name="{{ name }}">
+                                    <i class="fas fa-vial"></i>
+                                  </button>
+                                  <button type="button" class="btn btn-outline-secondary edit-provider-btn" data-type="{{ type }}" data-name="{{ name }}" data-config="{{ cfg|json_encode|e('html_attr') }}">
+                                    <i class="fas fa-edit"></i>
+                                  </button>
+                                  <button type="button" class="btn btn-outline-danger delete-provider-btn" data-type="{{ type }}" data-name="{{ name }}">
+                                    <i class="fas fa-trash"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          {% endfor %}
+                          <hr>
+                        {% endfor %}
+                      {% else %}
+                        <div class="text-center py-5 text-muted">
+                          {{ text_no_providers_configured }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="performance-pane">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header"><h5>{{ text_execution_settings }}</h5></div>
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_batch_size }}</label>
+                        <input type="number" name="module_mas_batch_size" value="{{ module_mas_batch_size }}" class="form-control" min="10" max="1000">
+                        <div class="form-text">{{ help_batch_size }}</div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_max_execution_time }}</label>
+                        <input type="number" name="module_mas_max_execution_time" value="{{ module_mas_max_execution_time }}" class="form-control" min="60" max="3600">
+                        <div class="form-text">{{ help_max_execution_time }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header"><h5>{{ text_rate_limiting }}</h5></div>
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" name="module_mas_rate_limit_enabled" value="1"{% if module_mas_rate_limit_enabled %} checked{% endif %}>
+                          <label class="form-check-label">{{ text_enable_rate_limiting }}</label>
+                        </div>
+                        <div class="form-text">{{ help_rate_limiting }}</div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_max_requests_hour }}</label>
+                        <input type="number" name="module_mas_rate_limit_requests" value="{{ module_mas_rate_limit_requests }}" class="form-control" min="100" max="10000">
+                        <div class="form-text">{{ help_max_requests }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="security-pane">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header"><h5>{{ text_api_settings }}</h5></div>
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" name="module_mas_api_enabled" value="1"{% if module_mas_api_enabled %} checked{% endif %}>
+                          <label class="form-check-label">{{ text_enable_api }}</label>
+                        </div>
+                        <div class="form-text">{{ help_api }}</div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_api_token }}</label>
+                        <div class="input-group">
+                          <input type="text" name="module_mas_api_token" value="{{ module_mas_api_token }}" class="form-control" readonly>
+                          <button type="button" class="btn btn-outline-secondary" id="regenerate-api-token">
+                            <i class="fas fa-sync-alt"></i>
+                          </button>
+                        </div>
+                        <div class="form-text text-warning">{{ help_api_token }}</div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_webhook_secret }}</label>
+                        <div class="input-group">
+                          <input type="text" name="module_mas_webhook_secret" value="{{ module_mas_webhook_secret }}" class="form-control" readonly>
+                          <button type="button" class="btn btn-outline-secondary" id="regenerate-webhook-secret">
+                            <i class="fas fa-sync-alt"></i>
+                          </button>
+                        </div>
+                        <div class="form-text">{{ help_webhook_secret }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header"><h5>{{ text_cors_settings }}</h5></div>
+                    <div class="card-body">
+                      <div class="mb-3">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" name="module_mas_cors_enabled" value="1"{% if module_mas_cors_enabled %} checked{% endif %}>
+                          <label class="form-check-label">{{ text_enable_cors }}</label>
+                        </div>
+                        <div class="form-text">{{ help_cors }}</div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">{{ text_allowed_domains }}</label>
+                        <textarea name="module_mas_cors_domains" class="form-control" rows="4">{{ module_mas_cors_domains }}</textarea>
+                        <div class="form-text">{{ help_cors_domains }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="status-pane">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      <h5>{{ text_system_overview }}</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="row text-center">
+                        <div class="col-6">
+                          <div class="border rounded p-3">
+                            <h3 class="text-{{ system_status.mas_enabled ? 'success' : 'secondary' }}">
+                              <i class="fas fa-{{ system_status.mas_enabled ? 'check-circle' : 'times-circle' }}"></i>
+                            </h3>
+                            <small>{{ text_mas_status }}</small>
+                            <div class="fw-bold">{{ system_status.mas_enabled ? text_enabled : text_disabled }}</div>
+                          </div>
+                        </div>
+                        <div class="col-6">
+                          <div class="border rounded p-3">
+                            <h3 class="text-primary">{{ system_status.providers_configured|default('0') }}</h3>
+                            <small>{{ text_providers }}</small>
+                            <div>{{ system_status.providers_active|default('0') }} {{ text_active }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header"><h5>{{ text_system_tests }}</h5></div>
+                    <div class="card-body">
+                      <button type="button" class="btn btn-outline-primary mb-3" id="test-system-btn">
+                        <i class="fas fa-vial"></i> {{ text_run_system_tests }}
+                      </button>
+                      <div id="system-test-results" class="d-none">
+                        <div class="border rounded p-3">
+                          <h6>{{ text_test_results }}</h6>
+                          <div id="test-results-content"></div>
+                        </div>
+                      </div>
+                      
+                      {% if module_mas_status == '1' %}
+                      <hr>
+                      <div class="d-grid gap-2">
+                        <a href="index.php?route=extension/mas/dashboard&user_token={{ user_token }}" class="btn btn-primary btn-sm">
+                          <i class="fas fa-tachometer-alt"></i> {{ text_open_dashboard }}
+                        </a>
+                        <a href="index.php?route=extension/mas/segments&user_token={{ user_token }}" class="btn btn-outline-primary btn-sm">
+                          <i class="fas fa-users"></i> {{ text_manage_segments }}
+                        </a>
+                        <a href="index.php?route=extension/mas/workflows&user_token={{ user_token }}" class="btn btn-outline-primary btn-sm">
+                          <i class="fas fa-project-diagram"></i> {{ text_manage_workflows }}
+                        </a>
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="provider-config-modal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ text_configure_provider }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="provider-config-form">
+          <input type="hidden" id="provider-type" name="provider_type">
+          <input type="hidden" id="provider-class" name="provider_class">
+          
+          <div class="mb-3">
+            <label class="form-label">{{ text_provider_name }} <span class="text-danger">*</span></label>
+            <input type="text" id="provider-name" name="provider_name" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="provider-enabled" name="enabled" checked>
+              <label class="form-check-label">{{ text_enabled }}</label>
+            </div>
+          </div>
+
+          <div id="provider-config-fields"></div>
+          
+          <div class="d-flex justify-content-between">
+            <button type="button" class="btn btn-outline-secondary" id="test-config-btn">
+              <i class="fas fa-vial"></i> {{ text_test_configuration }}
+            </button>
+            <div id="test-result"></div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ button_cancel }}</button>
+        <button type="button" class="btn btn-primary" id="save-provider-config">{{ button_save }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(function() {
+    var userToken = '{{ user_token }}';
+
+    // Save configuration
+    $('#save-config-btn').click(function() {
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ text_saving }}');
+        
+        $.ajax({
+            url: 'index.php?route=extension/mas/module/mas.save&user_token=' + userToken,
+            type: 'POST',
+            data: $('#form-mas-config').serialize(),
+            dataType: 'json',
+            success: function(data) {
+                showAlert(data.success || '{{ text_success }}', 'success');
+            },
+            error: function() {
+                showAlert('{{ text_save_error }}', 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false).html('<i class="fas fa-save"></i> {{ button_save }}');
+            }
+        });
+    });
+
+    // Configure provider
+    $(document).on('click', '.configure-provider-btn', function() {
+        var provider = JSON.parse($(this).attr('data-provider'));
+        $('#provider-type').val(provider.type);
+        $('#provider-class').val(provider.class);
+        $('#provider-name').val(provider.name);
+        $('#provider-config-modal').modal('show');
+    });
+
+    // Test provider config
+    $('#test-config-btn').click(function() {
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ text_testing }}');
+        
+        var config = {};
+        $('#provider-config-fields input, #provider-config-fields select').each(function() {
+            if ($(this).attr('name')) {
+                config[$(this).attr('name')] = $(this).val();
+            }
+        });
+        
+        $.ajax({
+            url: 'index.php?route=extension/mas/module/mas.test_provider&user_token=' + userToken,
+            type: 'POST',
+            data: {
+                provider_class: $('#provider-class').val(),
+                config: JSON.stringify(config)
+            },
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    $('#test-result').html('<span class="text-success"><i class="fas fa-check"></i> {{ text_test_passed }}</span>');
+                } else {
+                    $('#test-result').html('<span class="text-danger"><i class="fas fa-times"></i> ' + (data.error || '{{ text_test_failed }}') + '</span>');
+                }
+            },
+            error: function() {
+                $('#test-result').html('<span class="text-danger"><i class="fas fa-times"></i> {{ text_connection_error }}</span>');
+            },
+            complete: function() {
+                btn.prop('disabled', false).html('<i class="fas fa-vial"></i> {{ text_test_configuration }}');
+            }
+        });
+    });
+
+    // Save provider config
+    $('#save-provider-config').click(function() {
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ text_saving }}');
+        
+        var config = {};
+        $('#provider-config-fields input, #provider-config-fields select').each(function() {
+            if ($(this).attr('name')) {
+                config[$(this).attr('name')] = $(this).val();
+            }
+        });
+        
+        $.ajax({
+            url: 'index.php?route=extension/mas/module/mas.save_provider&user_token=' + userToken,
+            type: 'POST',
+            data: {
+                provider_type: $('#provider-type').val(),
+                provider_name: $('#provider-name').val(),
+                config: JSON.stringify(config),
+                enabled: $('#provider-enabled').prop('checked') ? '1' : '0'
+            },
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    $('#provider-config-modal').modal('hide');
+                    location.reload();
+                } else {
+                    showAlert(data.error, 'danger');
+                }
+            },
+            error: function() {
+                showAlert('{{ text_save_error }}', 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false).html('{{ button_save }}');
+            }
+        });
+    });
+
+    // Delete provider
+    $(document).on('click', '.delete-provider-btn', function() {
+        var type = $(this).data('type');
+        var name = $(this).data('name');
+        
+        if (confirm('{{ text_confirm_delete }}')) {
+            $.ajax({
+                url: 'index.php?route=extension/mas/module/mas.delete_provider&user_token=' + userToken,
+                type: 'POST',
+                data: {
+                    provider_type: type,
+                    provider_name: name
+                },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        location.reload();
+                    } else {
+                        showAlert(data.error, 'danger');
+                    }
+                }
+            });
+        }
+    });
+
+    // Provider status toggle
+    $(document).on('change', '.provider-status-toggle', function() {
+        var checkbox = $(this);
+        var type = checkbox.data('type');
+        var name = checkbox.data('name');
+        var enabled = checkbox.prop('checked');
+        
+        $.ajax({
+            url: 'index.php?route=extension/mas/module/mas.save_provider&user_token=' + userToken,
+            type: 'POST',
+            data: {
+                provider_type: type,
+                provider_name: name,
+                enabled: enabled ? '1' : '0'
+            },
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    showAlert('Provider ' + (enabled ? 'enabled' : 'disabled'), 'success');
+                } else {
+                    checkbox.prop('checked', !enabled);
+                    showAlert(data.error, 'danger');
+                }
+            },
+            error: function() {
+                checkbox.prop('checked', !enabled);
+                showAlert('Connection error', 'danger');
+            }
+        });
+    });
+
+    // System tests
+    $('#test-system-btn').click(function() {
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ text_running_tests }}');
+        $('#system-test-results').removeClass('d-none');
+        
+        $.ajax({
+            url: 'index.php?route=extension/mas/module/mas.test_system&user_token=' + userToken,
+            type: 'POST',
+            data: {},
+            dataType: 'json',
+            success: function(data) {
+                var html = '';
+                $.each(data.results, function(test, result) {
+                    html += '<div class="d-flex justify-content-between py-2 border-bottom">';
+                    html += '<span>' + test.replace(/_/g, ' ').toUpperCase() + '</span>';
+                    html += '<span class="text-' + (result.success ? 'success' : 'danger') + '">';
+                    html += '<i class="fas fa-' + (result.success ? 'check' : 'times') + '"></i> ' + result.message;
+                    html += '</span></div>';
+                });
+                $('#test-results-content').html(html);
+                showAlert(data.message, data.success ? 'success' : 'warning');
+            },
+            error: function() {
+                $('#test-results-content').html('<div class="text-danger">{{ text_test_error }}</div>');
+            },
+            complete: function() {
+                btn.prop('disabled', false).html('<i class="fas fa-vial"></i> {{ text_run_system_tests }}');
+            }
+        });
+    });
+
+    // Flush cache
+    $('#flush-cache-btn').click(function() {
+        var btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ text_flushing }}');
+        
+        $.ajax({
+            url: 'index.php?route=extension/mas/module/mas.flush_cache&user_token=' + userToken,
+            type: 'POST',
+            data: {},
+            dataType: 'json',
+            success: function(data) {
+                showAlert(data.message, data.success ? 'success' : 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false).html('<i class="fas fa-sync-alt"></i> {{ text_flush_cache }}');
+            }
+        });
+    });
+
+    // Refresh status
+    $('#refresh-status-btn').click(function() {
+        var btn = $(this);
+        btn.html('<i class="fas fa-spinner fa-spin"></i>');
+        
+        $.ajax({
+            url: 'index.php?route=extension/mas/module/mas.refresh_status&user_token=' + userToken,
+            type: 'POST',
+            data: {},
+            dataType: 'json',
+            success: function(data) {
+                if (data.success) {
+                    // Update status UI
+                    location.reload();
+                }
+            },
+            complete: function() {
+                btn.html('<i class="fas fa-sync-alt"></i> {{ text_refresh }}');
+            }
+        });
+    });
+
+    // Generate tokens
+    $('#regenerate-api-token').click(function() {
+        if (confirm('{{ text_confirm_regenerate_token }}')) {
+            $('input[name="module_mas_api_token"]').val(generateToken(64));
+        }
+    });
+
+    $('#regenerate-webhook-secret').click(function() {
+        if (confirm('{{ text_confirm_regenerate_secret }}')) {
+            $('input[name="module_mas_webhook_secret"]').val(generateToken(48));
+        }
+    });
+
+    function generateToken(length) {
+        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var result = '';
+        for (var i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+
+    function showAlert(message, type) {
+        var alertClass = 'alert-' + type;
+        var alert = $('<div class="alert ' + alertClass + ' alert-dismissible fade show position-fixed" style="top:20px;right:20px;z-index:9999;max-width:400px;">' +
+            '<i class="fas fa-' + (type === 'success' ? 'check' : type === 'danger' ? 'exclamation-triangle' : 'info-circle') + '"></i> ' + message +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+            '</div>');
+        
+        $('body').append(alert);
+        setTimeout(function() { alert.remove(); }, 5000);
+    }
+});
+</script>
+
+{{ footer }}

@@ -1,0 +1,408 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="float-right">
+        <button type="button" class="btn btn-primary" onclick="location = '{{ refresh_url }}'">
+          <i class="fas fa-sync-alt"></i> {{ button_refresh }}
+        </button>
+      </div>
+      <h1><i class="fas fa-tachometer-alt"></i> {{ heading_title }}</h1>
+      <ol class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li class="breadcrumb-item">
+          {% if breadcrumb.href %}
+            <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a>
+          {% else %}
+            {{ breadcrumb.text }}
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible fade show">
+      <i class="fas fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success alert-dismissible fade show">
+      <i class="fas fa-check-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+
+    <!-- KPI Cards -->
+    <div class="mas-kpi-grid mb-4">
+      {% for kpi in kpis %}
+      <div class="mas-kpi-card border-{{ kpi.color }}">
+        <div class="card-body text-center">
+          <div class="mas-kpi-icon text-{{ kpi.color }}">
+            <i class="fas fa-{{ kpi.icon }}"></i>
+          </div>
+          <div class="mas-kpi-value">{{ kpi.value }}</div>
+          <div class="mas-kpi-label">{{ kpi.label }}</div>
+          {% if kpi.change is not null %}
+          <div class="mas-kpi-change {% if kpi.change >= 0 %}text-success{% else %}text-danger{% endif %}">
+            <i class="fas fa-arrow-{% if kpi.change >= 0 %}up{% else %}down{% endif %}"></i> {{ kpi.change|abs }}%
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+      <!-- Section Cards -->
+      <div class="col-lg-8">
+        <div class="row">
+          {% for section in sections %}
+          <div class="col-lg-6 mb-4">
+            <div class="card mas-section-card h-100" onclick="location.href='{{ section.url }}'">
+              <div class="card-header bg-{{ section.color }} text-white">
+                <h5 class="mb-0">
+                  <i class="fas fa-{{ section.icon }}"></i> {{ section.title }}
+                  <span class="badge badge-light float-right">{{ section.count }}</span>
+                </h5>
+              </div>
+              <div class="card-body">
+                <p class="card-text">{{ section.description }}</p>
+                <ul class="list-unstyled mas-feature-list">
+                  {% for feat in section.features %}
+                  <li><i class="fas fa-{{ feat.icon }} text-{{ feat.color }}"></i> {{ feat.text }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="card-footer bg-light mas-section-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">{{ text_last_updated }}: {{ section.last_update }}</small>
+                  <i class="fas fa-arrow-right text-{{ section.color }}"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mas-quick-actions">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-bolt"></i> {{ text_quick_actions }}</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% for action in quick_actions %}
+              <div class="col-md-4 col-sm-6 mb-3">
+                {% if action.url == 'javascript:runMaintenance()' %}
+                <button type="button" class="btn btn-outline-{{ action.color }} btn-block mas-quick-btn" onclick="runMaintenance()">
+                  <i class="fas fa-{{ action.icon }}"></i> {{ action.text }}
+                </button>
+                {% else %}
+                <a href="{{ action.url }}" class="btn btn-outline-{{ action.color }} btn-block mas-quick-btn">
+                  <i class="fas fa-{{ action.icon }}"></i> {{ action.text }}
+                </a>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4">
+        <!-- System Health -->
+        <div class="card mb-4 mas-health-card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-heartbeat"></i> {{ text_system_status }}
+              <button type="button" class="btn btn-sm btn-outline-primary float-right" onclick="refreshHealth()">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </h5>
+          </div>
+          <div class="card-body">
+            {% for component in health %}
+            <div class="mas-health-component mb-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="mas-component-name">{{ component.name }}</span>
+                <span class="badge badge-{% if component.status == 'healthy' %}success{% elseif component.status == 'disabled' %}secondary{% elseif component.status == 'delayed' %}warning{% else %}danger{% endif %} mas-status-badge">
+                  {{ component.status_text }}
+                </span>
+              </div>
+            </div>
+            {% endfor %}
+            
+            <hr class="mas-divider">
+            
+            <h6 class="text-muted mb-3">{{ text_resources }}</h6>
+            <div class="mas-resource-usage mb-3">
+              <div class="d-flex justify-content-between mb-1">
+                <small class="mas-resource-label">{{ text_memory_usage }}</small>
+                <small class="mas-resource-value">{{ usage.memory }}%</small>
+              </div>
+              <div class="progress mas-progress">
+                <div class="progress-bar bg-{% if usage.memory > 80 %}danger{% elseif usage.memory > 60 %}warning{% else %}success{% endif %}" 
+                     role="progressbar" style="width: {{ usage.memory }}%"></div>
+              </div>
+            </div>
+            
+            <div class="mas-resource-usage">
+              <div class="d-flex justify-content-between mb-1">
+                <small class="mas-resource-label">{{ text_cpu_usage }}</small>
+                <small class="mas-resource-value">{{ usage.cpu }}%</small>
+              </div>
+              <div class="progress mas-progress">
+                <div class="progress-bar bg-{% if usage.cpu > 80 %}danger{% elseif usage.cpu > 60 %}warning{% else %}success{% endif %}" 
+                     role="progressbar" style="width: {{ usage.cpu }}%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    {% if recent_activity %}
+    <div class="row">
+      <div class="col-12">
+        <div class="card mas-activity-card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-history"></i> {{ text_recent_activity }}</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+              {% for activity in recent_activity %}
+              <div class="list-group-item mas-activity-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center">
+                    <div class="mas-activity-icon text-{{ activity.color }}">
+                      <i class="fas fa-{{ activity.icon }}"></i>
+                    </div>
+                    <div class="mas-activity-content">
+                      <div class="mas-activity-description">{{ activity.description }}</div>
+                      <small class="mas-activity-meta text-muted">{{ activity.user }} - {{ activity.timestamp }}</small>
+                    </div>
+                  </div>
+                  {% if activity.url %}
+                  <a href="{{ activity.url }}" class="btn btn-sm btn-outline-primary mas-activity-btn">{{ text_view }}</a>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="mas-loading-overlay" class="mas-loading-overlay d-none">
+  <div class="mas-loading-content">
+    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+    <p id="mas-loading-message">{{ text_processing }}</p>
+  </div>
+</div>
+
+<script type="text/javascript">
+// MAS Dashboard JavaScript - Integrated
+function refreshHealth() {
+    showLoading();
+    $.ajax({
+        url: 'index.php?route=extension/mas/dashboard.refreshHealth&user_token={{ user_token }}',
+        type: 'GET',
+        dataType: 'json',
+        success: function(json) {
+            hideLoading();
+            if (json.success) {
+                if (json.health && json.usage) {
+                    updateHealthDisplay(json.health, json.usage);
+                    showAlert('System health refreshed', 'success');
+                } else {
+                    location.reload();
+                }
+            } else {
+                showAlert(json.error || '{{ error_health_refresh }}', 'danger');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.log('XHR:', xhr);
+            console.log('Status:', status);
+            console.log('Error:', error);
+            hideLoading();
+            showAlert('{{ error_ajax_failed }}', 'danger');
+        }
+    });
+}
+
+function runMaintenance() {
+    if (confirm('{{ text_confirm_maintenance }}')) {
+        showLoading('Running maintenance tasks...');
+        $.ajax({
+            url: 'index.php?route=extension/mas/dashboard.runMaintenance&user_token={{ user_token }}',
+            type: 'POST',
+            dataType: 'json',
+            timeout: 60000,
+            success: function(json) {
+                hideLoading();
+                if (json.success) {
+                    showAlert(json.message || 'Maintenance completed successfully', 'success');
+                    setTimeout(function() { 
+                        location.reload(); 
+                    }, 2000);
+                } else {
+                    showAlert(json.error || '{{ error_maintenance_failed }}', 'danger');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('XHR:', xhr);
+                console.log('Status:', status);
+                console.log('Error:', error);
+                hideLoading();
+                showAlert('{{ error_ajax_failed }}', 'danger');
+            }
+        });
+    }
+}
+
+function refreshHealthSilent() {
+    $.ajax({
+        url: 'index.php?route=extension/mas/dashboard.refreshHealth&user_token={{ user_token }}',
+        type: 'GET',
+        dataType: 'json',
+        timeout: 10000,
+        success: function(json) {
+            if (json.success && json.health && json.usage) {
+                updateHealthDisplay(json.health, json.usage);
+            }
+        },
+        error: function() {
+            console.warn('Silent health refresh failed');
+        }
+    });
+}
+
+function updateHealthDisplay(healthData, usageData) {
+    // Update health components
+    $('.mas-health-component').each(function(index) {
+        if (healthData[index]) {
+            var component = healthData[index];
+            var $badge = $(this).find('.mas-status-badge');
+            var statusClass = getStatusClass(component.status);
+            
+            $badge.removeClass('badge-success badge-danger badge-warning badge-secondary')
+                  .addClass('badge-' + statusClass)
+                  .text(component.status_text);
+        }
+    });
+
+    // Update resource usage
+    if (usageData) {
+        updateResourceBar('memory', usageData.memory);
+        updateResourceBar('cpu', usageData.cpu);
+    }
+}
+
+function updateResourceBar(type, percentage) {
+    var $usage = $('.mas-resource-usage').filter(function() {
+        return $(this).find('.mas-resource-label').text().toLowerCase().includes(type);
+    });
+
+    if ($usage.length) {
+        $usage.find('.mas-resource-value').text(percentage + '%');
+        var $progressBar = $usage.find('.progress-bar');
+        var colorClass = percentage > 80 ? 'bg-danger' : (percentage > 60 ? 'bg-warning' : 'bg-success');
+        
+        $progressBar.css('width', percentage + '%')
+                    .removeClass('bg-success bg-warning bg-danger')
+                    .addClass(colorClass);
+    }
+}
+
+function getStatusClass(status) {
+    switch (status) {
+        case 'healthy': return 'success';
+        case 'error': return 'danger';
+        case 'disabled': return 'secondary';
+        case 'delayed': return 'warning';
+        default: return 'secondary';
+    }
+}
+
+function showLoading(message) {
+    message = message || '{{ text_processing }}';
+    $('#mas-loading-message').text(message);
+    $('#mas-loading-overlay').removeClass('d-none');
+}
+
+function hideLoading() {
+    $('#mas-loading-overlay').addClass('d-none');
+}
+
+function showAlert(message, type) {
+    var alertClass = 'alert-' + (type === 'success' ? 'success' : 
+                                 type === 'warning' ? 'warning' : 
+                                 type === 'danger' ? 'danger' : 'info');
+    var icon = type === 'success' ? 'check-circle' : 
+               type === 'warning' ? 'exclamation-triangle' :
+               type === 'danger' ? 'exclamation-circle' : 'info-circle';
+
+    var alertHtml = '<div class="alert ' + alertClass + ' alert-dismissible fade show">' +
+        '<i class="fas fa-' + icon + '"></i> ' + message +
+        '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+        '</div>';
+    
+    $('.container-fluid').prepend(alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+        $('.container-fluid .alert').first().alert('close');
+    }, 5000);
+}
+
+$(document).ready(function() {
+    // Section card hover effects
+    $('.mas-section-card').hover(
+        function() { 
+            $(this).addClass('mas-card-hover');
+        },
+        function() { 
+            $(this).removeClass('mas-card-hover');
+        }
+    );
+    
+    // KPI card hover effects
+    $('.mas-kpi-card').hover(
+        function() {
+            $(this).find('.mas-kpi-icon').addClass('pulse');
+        },
+        function() {
+            $(this).find('.mas-kpi-icon').removeClass('pulse');
+        }
+    );
+    
+    // Quick action button effects
+    $('.mas-quick-btn').hover(
+        function() {
+            $(this).find('i').addClass('bounce');
+        },
+        function() {
+            $(this).find('i').removeClass('bounce');
+        }
+    );
+    
+    // Auto-refresh health every 30 seconds
+    setInterval(function() {
+        refreshHealthSilent();
+    }, 30000);
+});
+</script>
+
+{{ footer }}

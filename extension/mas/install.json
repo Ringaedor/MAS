@@ -1,0 +1,8 @@
+{
+  "name": "Marketing Automation Suite",
+  "code": "marketing_automation_suite",
+  "description": "Advanced marketing automation suite for OpenCart. Provides centralized management of workflows, multichannel campaigns, user segmentation, reporting, and automations, with native admin integration and a fully modular, extensible architecture.",
+  "version": "1.0.0",
+  "author": "Ringaedor",
+  "link": "https://www.ringaedor.org/mas"
+}

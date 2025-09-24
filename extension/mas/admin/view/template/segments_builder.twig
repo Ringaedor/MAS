@@ -1,0 +1,454 @@
+{{ header }}{{ column_left }}
+
+<div id="content">
+  <div class="page-header pb-0 mb-0">
+    <div class="container-fluid">
+      <div class="float-end">
+        <a href="{{ back }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> {{ button_back }}</a>
+        <a href="{{ ai_insights }}" class="btn btn-info"><i class="fas fa-brain"></i> {{ text_ai_insights }}</a>
+        <a href="{{ add }}" class="btn btn-success"><i class="fas fa-plus"></i> {{ button_add }}</a>
+      </div>
+      <h1>{{ text_segment_builder }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid builder-container pb-0">
+    {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show"><i class="fas fa-exclamation-triangle"></i> {{ error }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="alert alert-success alert-dismissible fade show"><i class="fas fa-check"></i> {{ success }}</div>
+    {% endif %}
+
+    <div class="row gx-4 gy-3">
+      <!-- Sidebar: Filters Catalog -->
+      <div class="col-xl-3 col-lg-4">
+        <div class="card shadow-sm mb-4 sticky-top" style="top: 90px;">
+          <div class="card-header pb-2 d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-filter"></i> {{ text_available_filters }}</span>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="expand-filters"><i class="fas fa-chevron-down"></i></button>
+          </div>
+          <div class="card-body p-2 filters-catalog-list" style="height: 56vh; overflow-y: auto;" id="filters-catalog">
+            {% for category, catdata in filter_categories %}
+              <div class="mb-2">
+                <h6 class="text-muted mb-1 small"><i class="fas fa-folder fa-xs"></i> {{ catdata.name }}</h6>
+                <ul class="list-unstyled ms-2 mb-2">
+                  {% for filter in catdata.filters %}
+                    <li class="mb-1">
+                      <span class="draggable-filter badge bg-light border text-dark px-2 py-1 w-100"
+                        data-filter-id="{{ filter.id }}"
+                        data-filter-type="{{ filter.type }}"
+                        draggable="true">{{ filter.name }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="card-footer p-2 text-center">
+            <span class="small text-muted"><i class="fas fa-arrow-left"></i> {{ text_drag_filters_here }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Builder Area -->
+      <div class="col-xl-9 col-lg-8">
+        <div class="card shadow-sm mb-3">
+          <div class="card-body builder-main-area">
+            <form id="segment-builder-form" autocomplete="off">
+              <input type="hidden" name="segment_id" value="{{ segment.segment_id }}">
+              <div class="row g-3">
+                <div class="col-md-7">
+                  <div class="mb-2">
+                    <label class="form-label fw-bold">{{ text_segment_name }} <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="name" value="{{ segment.name }}" placeholder="{{ placeholder_segment_name }}" maxlength="255" required>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">{{ text_description }}</label>
+                    <textarea class="form-control" name="description" rows="2" placeholder="{{ placeholder_segment_description }}">{{ segment.description }}</textarea>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label class="form-label">{{ text_segment_type }}</label>
+                      <select class="form-select" name="type" required>
+                        <option value="dynamic"{% if segment.type == 'dynamic' %} selected{% endif %}>{{ text_dynamic }}</option>
+                        <option value="static"{% if segment.type == 'static' %} selected{% endif %}>{{ text_static }}</option>
+                        <option value="ai"{% if segment.type == 'ai' %} selected{% endif %}>{{ text_ai_generated }}</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">{{ text_status }}</label>
+                      <select class="form-select" name="status">
+                        <option value="1"{% if segment.status %} selected{% endif %}>{{ text_enabled }}</option>
+                        <option value="0"{% if not segment.status %} selected{% endif %}>{{ text_disabled }}</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <!-- Live Segment KPIs -->
+                  <div class="row gx-2 gy-2 mb-1">
+                    <div class="col-6">
+                      <div class="card bg-light p-2 text-center h-100 border">
+                        <div class="fs-4 fw-semibold text-primary" id="kpi-customers">—</div>
+                        <div class="small text-muted">{{ text_estimated_customers }}</div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="card bg-light p-2 text-center h-100 border">
+                        <div class="fs-4 fw-semibold text-secondary" id="kpi-complexity">-</div>
+                        <div class="small text-muted">{{ text_complexity }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row gx-2 gy-2 mb-2">
+                    <div class="col-6">
+                      <div class="card bg-light p-2 text-center h-100 border">
+                        <div class="fs-6 text-dark" id="kpi-est-time">-</div>
+                        <div class="small text-muted">{{ text_est_time }}</div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="card bg-light p-2 text-center h-100 border">
+                        <div class="fs-6 text-dark" id="kpi-filters">0</div>
+                        <div class="small text-muted">{{ text_active_filters }}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="d-flex flex-wrap gap-2 mt-2 justify-content-center">
+                    <button type="button" id="preview-btn" class="btn btn-outline-primary px-3"><i class="fas fa-eye"></i> {{ text_dynamic_preview }}</button>
+                    <button type="button" id="validate-btn" class="btn btn-outline-secondary px-3"><i class="fas fa-tasks"></i> {{ text_validate }}</button>
+                    <button type="button" id="ai-suggest-btn" class="btn btn-outline-success px-3" data-bs-toggle="modal" data-bs-target="#aiSuggestModal"><i class="fas fa-magic"></i> {{ text_suggest }}</button>
+                  </div>
+                </div>
+              </div>
+              <hr>
+              <!-- Segment Filter Logic -->
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">{{ text_filter_logic }}</label>
+                  <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="logic" id="and_logic" value="AND" autocomplete="off"
+                      {% if segment.logic == 'AND' %}checked{% endif %}>
+                    <label class="btn btn-outline-dark" for="and_logic"><i class="fas fa-link"></i> {{ text_and_logic }}</label>
+                    <input type="radio" class="btn-check" name="logic" id="or_logic" value="OR" autocomplete="off"
+                      {% if segment.logic == 'OR' %}checked{% endif %}>
+                    <label class="btn btn-outline-dark" for="or_logic"><i class="fas fa-code-branch"></i> {{ text_or_logic }}</label>
+                  </div>
+                  <div class="form-text">{{ text_logic_help }}</div>
+                </div>
+                <div class="col-md-8 text-end">
+                  <button type="button" class="btn btn-outline-warning" id="save-template-btn"><i class="fas fa-save"></i> {{ text_save_template }}</button>
+                  <button type="button" class="btn btn-outline-info" data-bs-toggle="collapse" data-bs-target="#template-gallery"><i class="fas fa-folder-open"></i> {{ text_templates|default('Templates') }}</button>
+                </div>
+              </div>
+
+              <!-- Templates Gallery -->
+              <div class="collapse mb-3" id="template-gallery">
+                <div class="card card-body bg-light border">
+                  <div class="row gy-2">
+                    {% for template in segment_templates %}
+                    <div class="col-md-4">
+                      <div class="card h-100 border shadow-sm mb-2">
+                        <div class="card-body p-2">
+                          <strong>{{ template.name }}</strong>
+                          <p class="small text-muted mb-1">{{ template.description }}</p>
+                          <button type="button" data-template='{{ template.filters|json_encode }}' class="btn btn-sm btn-primary apply-template-btn">{{ text_apply_template|default('Applica') }}</button>
+                        </div>
+                      </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center text-muted small">{{ text_no_template|default('Nessun template disponibile') }}</div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Builder Drag & Drop Area -->
+              <div class="builder-dnd-area mt-3 mb-2 border rounded bg-white p-4 shadow-sm" id="active-filters-zone" style="min-height: 120px;">
+                {% if segment.filters is empty %}
+                  <div class="text-center text-muted" id="no-filters-zone">
+                    <i class="fas fa-sliders-h fa-2x mb-2"></i>
+                    <div>{{ text_no_filters }}</div>
+                  </div>
+                {% endif %}
+                <div class="row" id="builder-filters-list">
+                {% for filter in segment.filters %}
+                  <div class="col-md-4 mb-2 builder-active-filter" data-filter-id="{{ filter.id }}" data-filter-type="{{ filter.type }}">
+                    <div class="card border border-primary h-100 draggable-active-filter" draggable="true">
+                      <div class="card-header d-flex justify-content-between align-items-center p-2">
+                        <span class="fw-bold">{{ filter.name }}</span>
+                        <button class="btn btn-sm btn-link text-danger remove-filter-btn px-1 py-0" type="button"><i class="fas fa-times"></i></button>
+                      </div>
+                      <div class="card-body p-2">
+                        <input type="text" name="filters[{{ filter.id }}]" value="{{ filter.value|default('') }}" class="form-control form-control-sm" placeholder="{{ placeholder_filter_value }}">
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+                </div>
+              </div>
+
+              <!-- Dynamic Preview -->
+              <div class="preview-area bg-light border p-3 mt-3 rounded">
+                <div id="builder-preview-loader" class="text-center d-none">
+                  <i class="fas fa-spinner fa-spin fa-2x"></i>
+                  <div class="text-muted small">{{ text_loading_segments }}</div>
+                </div>
+                <div id="builder-preview" class="row"></div>
+              </div>
+
+              <div class="d-flex justify-content-end gap-3 mt-4">
+                <button type="reset" class="btn btn-outline-secondary" id="builder-reset">{{ button_clear }}</button>
+                <button type="submit" class="btn btn-success" id="builder-save-btn"><i class="fas fa-save"></i> {{ button_save|default('Salva') }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Modal -->
+<div class="modal fade" id="aiSuggestModal" tabindex="-1" aria-labelledby="aiSuggestLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="aiSuggestLabel">{{ text_ai_assistant }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="aiSuggestLoading" class="text-center py-3 d-none">
+          <i class="fas fa-spinner fa-spin fa-2x"></i>
+        </div>
+        <div id="aiSuggestBody" class="py-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  // Drag&Drop filtri dal catalogo al builder
+  let draggedFilter = null;
+  $(document)
+    .on('dragstart', '.draggable-filter', function(e) {
+      draggedFilter = $(this).clone();
+      e.originalEvent.dataTransfer.setData('text/plain', $(this).data('filter-id'));
+    })
+    .on('dragover', '#active-filters-zone', function(e) {
+      e.preventDefault();
+      $(this).addClass('bg-drag-over');
+    })
+    .on('dragleave', '#active-filters-zone', function(e) {
+      $(this).removeClass('bg-drag-over');
+    })
+    .on('drop', '#active-filters-zone', function(e) {
+      e.preventDefault();
+      $(this).removeClass('bg-drag-over');
+      if (draggedFilter) {
+        addFilterToBuilder(draggedFilter.data('filter-id'), draggedFilter.text(), draggedFilter.data('filter-type'));
+        draggedFilter = null;
+        $('#no-filters-zone').hide();
+      }
+    });
+
+  function addFilterToBuilder(filterId, filterName, filterType) {
+    if($('#builder-filters-list [data-filter-id="'+filterId+'"]').length) return; //Avoid duplicate
+
+    let filterCard = $(
+      `<div class="col-md-4 mb-2 builder-active-filter" data-filter-id="${filterId}" data-filter-type="${filterType}">
+        <div class="card border border-primary h-100 draggable-active-filter" draggable="true">
+          <div class="card-header d-flex justify-content-between align-items-center p-2">
+            <span class="fw-bold">${filterName}</span>
+            <button class="btn btn-sm btn-link text-danger remove-filter-btn px-1 py-0" type="button"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="card-body p-2">
+            <input type="text" name="filters[${filterId}]" value="" class="form-control form-control-sm" placeholder="{{ placeholder_filter_value }}">
+          </div>
+        </div>
+      </div>`);
+    $('#builder-filters-list').append(filterCard);
+    updateKpiFiltersCount();
+  }
+
+  // Rimozione filtro drag&drop
+  $(document).on('click', '.remove-filter-btn', function(){
+    $(this).closest('.builder-active-filter').remove();
+    if($('#builder-filters-list .builder-active-filter').length === 0)
+      $('#no-filters-zone').show();
+    updateKpiFiltersCount();
+  });
+
+  function updateKpiFiltersCount() {
+    $('#kpi-filters').text($('#builder-filters-list .builder-active-filter').length);
+  }
+  
+  // Anteprima dinamica del segmento
+  $('#preview-btn').on('click', function() {
+    const filters = getFilters();
+    if(filters.length === 0) return alert('{{ text_no_filters_preview }}');
+    $('#builder-preview-loader').removeClass('d-none');
+    $('#builder-preview').empty();
+
+    $.ajax({
+      url: '{{ ajax_preview }}',
+      type: 'POST',
+      dataType: 'json',
+      data: {
+        filters: filters,
+        logic: $('[name=logic]:checked').val()
+      },
+      success: function(res) {
+        $('#builder-preview-loader').addClass('d-none');
+        // Update KPIs
+        $('#kpi-customers').text(res.data.estimated_count);
+        $('#kpi-complexity').text(res.data.complexity);
+        $('#kpi-est-time').text(res.data.estimated_time);
+        // Render preview customers samples
+        $('#builder-preview').empty();
+        if(res.data.sample_customers && res.data.sample_customers.length > 0) {
+          let html = '<div class="table-responsive"><table class="table table-hover table-sm mb-0"><thead><tr>';
+          for (let key in res.data.sample_customers[0]) html += `<th>${key}</th>`;
+          html += '</tr></thead><tbody>';
+          res.data.sample_customers.forEach(c => {
+            html += '<tr>';
+            for(let key in c) html += `<td>${c[key]}</td>`;
+            html += '</tr>';
+          });
+          html += '</tbody></table></div>';
+          $('#builder-preview').html(html);
+        } else {
+          $('#builder-preview').html('<div class="text-muted">{{ text_no_preview_results }}</div>');
+        }
+      },
+      error: function() {
+        $('#builder-preview-loader').addClass('d-none');
+        alert("{{ text_preview_error|default('Errore durante la preview') }}");
+      }
+    });
+  });
+
+  // Validazione ajax
+  $('#validate-btn').on('click', function() {
+    const form = $('#segment-builder-form').serialize();
+    $.post('{{ ajax_validate }}', form, function(res){
+      if(res.valid) {
+        alert('{{ text_validation_ok }}');
+      } else {
+        alert(res.errors ? res.errors.join('\n') : '{{ text_validation_ko }}');
+      }
+    }, 'json');
+  });
+
+  // Gestione AI SUGGEST
+  $('#ai-suggest-btn').on('click', function() {
+    $('#aiSuggestBody').empty();
+    $('#aiSuggestLoading').removeClass('d-none');
+    $.ajax({
+      url: '{{ ajax_ai_suggest }}',
+      type: 'POST',
+      data: {
+        context: $('textarea[name=description]').val(),
+        business_type: $('[name=business_type]').val()||'ecommerce'
+      },
+      success: function(res) {
+        $('#aiSuggestLoading').addClass('d-none');
+        if(res.suggestions && res.suggestions.length > 0) {
+          let html = '<div class="list-group">';
+          res.suggestions.forEach(s => {
+            html += `<div class="list-group-item">
+              <strong>${s.name}</strong><br>
+              <span class="small text-muted">${s.description}</span>
+              <button type="button" class="btn btn-sm btn-primary mt-2 apply-ai-suggestion" data-suggestion='${JSON.stringify(s.filters)}'>{{ text_apply_template }}</button>
+            </div>`;
+          });
+          html += '</div>';
+          $('#aiSuggestBody').html(html);
+        } else {
+          $('#aiSuggestBody').html('<div class="text-muted">{{ text_no_ai_suggestions }}</div>');
+        }
+      },
+      error: function() {
+        $('#aiSuggestLoading').addClass('d-none');
+        $('#aiSuggestBody').html('<div class="text-danger">{{ text_ai_error|default("Errore AI") }}</div>');
+      }
+    });
+  });
+
+  // Applicazione AI suggestion
+  $(document).on('click', '.apply-ai-suggestion', function(){
+    const filters = JSON.parse($(this).data('suggestion'));
+    applyFilters(filters);
+    $('#aiSuggestModal').modal('hide');
+  });
+
+  // Applica template
+  $('.apply-template-btn').on('click', function() {
+    const filters = JSON.parse($(this).data('template'));
+    applyFilters(filters);
+  });
+
+  function applyFilters(filters) {
+    $('#builder-filters-list').empty();
+    filters.forEach(f => {
+      addFilterToBuilder(f.id, f.name, f.type);
+      $('#builder-filters-list [data-filter-id="'+f.id+'"] input').val(f.value);
+    });
+    $('#no-filters-zone').hide();
+    updateKpiFiltersCount();
+  }
+
+  // Salvataggio segmento
+  $('#segment-builder-form').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+      url: '{{ ajax_save }}',
+      type: 'POST',
+      data: $(this).serialize(),
+      dataType: 'json',
+      success: function(res) {
+        if(res.success) {
+          alert('{{ text_segment_saved }}');
+          window.location = res.redirect;
+        } else if(res.error) {
+          alert(res.error);
+        }
+      },
+      error: function() { alert("{{ text_save_error|default('Errore salvataggio') }}"); }
+    });
+  });
+
+  // Reset zone
+  $('#builder-reset').on('click', function() {
+    $('#builder-filters-list').empty();
+    $('#no-filters-zone').show();
+    updateKpiFiltersCount();
+    $('.preview-area').find('#builder-preview').empty();
+    $('.preview-area').find('#builder-preview-loader').addClass('d-none');
+    $('#kpi-customers,#kpi-complexity,#kpi-est-time').text('-');
+  });
+
+  function getFilters() {
+    let filters = [];
+    $('#builder-filters-list .builder-active-filter').each(function(){
+      filters.push({
+        id: $(this).data('filter-id'),
+        name: $(this).find('.fw-bold').text(),
+        type: $(this).data('filter-type'),
+        value: $(this).find('input').val()
+      });
+    });
+    return filters;
+  }
+
+})();
+</script>
+
+{{ footer }}
