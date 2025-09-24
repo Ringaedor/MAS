@@ -1,0 +1,221 @@
+1. Dashboard (Panoramica)
+KPI real-time
+
+Fatturato, ordini, valore medio ordine (AOV), tasso di conversione, nuovi clienti, visite uniche
+
+Widget a schede, aggiornamento automatico (default ogni 15 minuti)
+
+Grafici di trend
+
+Selezione periodo rapido (oggi, ultimi 7 giorni, ultimi 30 giorni, intervallo personalizzato)
+
+Granularità (ora/giorno/settimana/mese)
+
+Drill-down con click su un punto per aprire dettagli
+
+Alert and Health
+
+Notifiche su provider esterni down, code messaggi bloccate, circuit breaker aperti
+
+Stato Event Queue, backlog messaggi, latenze medie per AI/Payment/Message Gateway
+
+Snapshot segmenti
+
+Top 5 segmenti per dimensione e per revenue
+
+Badge con percentuale di crescita
+
+2. Segmenti
+2.1 Elenco Segmenti
+Colonne: Nome, Tipo (Statico/Dinamico/AI), Dimensione, Ultimo aggiornamento, Stato (OK/Errore), Azioni
+
+Azioni rapide: Materializza, Esporta CSV, Duplica, Visualizza log, Elimina
+
+2.2 Costruttore Segmenti
+Interfaccia drag-and-drop per filtri:
+
+RFM (Recency/Frequency/Monetary)
+
+Comportamentali (page view, eventi custom)
+
+Demografici (età, sesso, località)
+
+Predictive (propensione acquisto, churn via AI)
+
+SQL avanzato per utenti esperti
+
+Anteprima live: conteggio clienti e sample (max 50)
+
+Validazione cicli logici e campi obbligatori
+
+Versioning delle definizioni
+
+2.3 Suggerimenti AI
+Form “Obiettivo” + sample dati → invoca OpenAISuggester
+
+Elenco proposte: nome, descrizione, confidenza (%)
+
+Pulsante “Crea segmento” apre il builder con criteri pre-popolati
+
+2.4 Log Materializzazioni
+Tabella storica: data, durata, #clienti, esito, messaggio errore
+
+Azioni: Riesegui singolo, Riesegui in massa, Esporta log JSON
+
+3. Workflow
+3.1 Elenco Workflow
+Colonne: Nome, Stato (Attivo/Bozza/Sospeso/Errore), #Esecuzioni totali, Conversion rate, Ultima esecuzione
+
+Azioni: Attiva/Sospendi, Duplica, Elimina
+
+3.2 Editor Grafico
+Canvas SVG con nodi: Trigger, Condizione, Azione, Delay
+
+Drag-and-drop e connessioni con validazione DAG
+
+Sidebar proprietà: parametri nodo, timeout, condizioni
+
+Mini-mappa e zoom per flussi complessi
+
+Modal “Test workflow” per esecuzione su record di prova
+
+3.3 Storico Esecuzioni
+Timeline di ogni run: esito globale, durata totale
+
+Dettaglio per step: input/output, stato, latenza, errore
+
+Azioni: Ritenta intero workflow, Ritenta step fallito, Annulla run
+
+3.4 Libreria Azioni/Trigger
+Catalogo filtrabile e ricercabile di tutte le azioni e trigger disponibili
+
+Documentazione inline: descrizione, parametri obbligatori/facoltativi
+
+4. Messaggistica
+4.1 Code Messaggi
+Sezioni separate per Email, SMS, Push
+
+Stati: pending, processing, sent, error
+
+Tabella con filtri per provider, data, stato, campagna
+
+Azioni bulk: Retry, Pausa/Riprendi, Elimina
+
+4.2 Provider Canali
+Lista provider configurati (Sendgrid, Mailgun, SMTP, Twilio, OneSignal…)
+
+Form di configurazione: credenziali, endpoint, region, opzioni avanzate
+
+Test connessione live con log handshake e tempi di risposta
+
+Visualizzazione metriche 24 h: invii, errori, latenza media
+
+4.3 Template
+Editor WYSIWYG + HTML raw con toggle rapido
+
+Selezione merge-tag: {{customer.firstname}}, {{order.total}}, {{segment.name}}…
+
+Anteprima desktop/mobile
+
+Versioning: cronologia modifiche e rollback
+
+Test invio con address dummy e log risultato
+
+Supporto multilingua con traduzioni inline
+
+4.4 Analytics Messaggistica
+Report per provider: delivered, opened, clicked, bounced, unsubscribed
+
+Heatmap click per template email
+
+A/B test subject line e grafici comparativi
+
+Export CSV delle metriche per periodo selezionato
+
+5. Consensi & Privacy
+5.1 Tipi di Consenso
+CRUD definizioni: codice, nome, descrizione, versione, obbligatorio/facoltativo
+
+Preview di come appare nel frontend (checkbox, banner, modal)
+
+Versioning template di consenso
+
+5.2 Log Consensi
+Tabella filtrabile per cliente, codice consenso, azione (accept/revoke), data, IP
+
+Dettaglio JSON metadata (user-agent, IP)
+
+Export CSV e PDF per audit
+
+5.3 Export GDPR
+Wizard per selezione cliente → generazione pacchetto ZIP con:
+
+CSV dei dati anagrafici + ordini
+
+Log consensi
+
+File PDF dettagliato
+
+Notifica completamento job + link download
+
+6. Report & KPI
+6.1 KPI Live
+Card configurabili drag-and-drop
+
+Metriche disponibili: revenue, ordini, AOV, CR, session, bounce, CLV
+
+Indicatori di progresso verso obiettivi
+
+6.2 Serie Temporali
+Grafici lineari e a barre, confronto multi-periodo
+
+Drill-down con click su punto dati → dettagli giornalieri/ora
+
+6.3 Drill-down
+Top prodotti per revenue
+
+Top segmenti per engagement
+
+Top canali (email, SMS, push)
+
+6.4 Export Report
+Modale selezione metriche + filtri + formato (CSV/PDF)
+
+Job in background con notifica e barra di avanzamento
+
+7. Audit & Sicurezza
+7.1 Log Operazioni
+Tabella filtrata per utente, categoria (security, data, system), severità
+
+Ricerca full-text su payload JSON
+
+Colori severità (critical: rosso, high: arancio, info: blu)
+
+7.2 Dettaglio Evento
+Visual diff before/after per eventi dataChange
+
+Visualizzazione JSON raw con evidenziazione syntax
+
+7.3 Ruoli & Permessi
+Mappatura ACL: segmenti, workflow, messaggistica, report, audit, impostazioni
+
+Toggle per abilitare/disabilitare permessi per gruppo utente
+
+7.4 Archiviazione & Pulizia
+Pannello retention: impostazione giorni, preview record da archiviare
+
+Pulsante “Archivia ora” e “Elimina archivi”
+
+8. Impostazioni
+Generali: lingua, fuso orario, email admin, feature flags
+
+Provider AI: API-key, model default, temperature, timeout, fallback order
+
+Cache & Performance: TTL segmenti, TTL AI, pulsante flush cache
+
+API & Webhook: token, CORS, log webhook
+
+Avanzate: debug mode, log SQL, route personalizzate
+
+Ogni sezione deve essere intuitiva, con al massimo due livelli di navigazione, descrizioni chiare nei titoli e help inline sui campi complessi.
+I layout devono seguire gli standard UI di OpenCart 4.1.x (Twig + Bootstrap), garantendo coerenza grafica e responsività.

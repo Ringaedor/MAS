@@ -1,0 +1,347 @@
+MAS – Specifica Funzionale Dettagliata per il Catalog (Frontend)
+Il lato catalog di MAS si integra nel frontend di OpenCart per offrire un'esperienza personalizzata, trasparente e conforme alla privacy. Tutte le funzionalità sono progettate per essere headless-ready e compatibili con temi custom.
+
+1. Architettura Frontend
+text
+Catalog MAS Integration
+├─ Hooks di Personalizzazione
+│  ├─ Segment-aware content
+│  ├─ Dynamic pricing
+│  ├─ Personalized recommendations  
+│  └─ A/B testing variants
+├─ Privacy & Consent Management
+│  ├─ Consent modals/forms
+│  ├─ Preference center
+│  ├─ GDPR data export
+│  └─ Right to be forgotten
+├─ Customer Journey Tracking
+│  ├─ Event emission (page views, clicks, purchases)
+│  ├─ Behavior analysis
+│  ├─ Workflow triggers
+│  └─ Real-time segmentation
+├─ Self-Service Portal
+│  ├─ Activity timeline
+│  ├─ Communication preferences
+│  ├─ Segment transparency
+│  └─ Data portability
+└─ Automated Communications
+   ├─ Triggered emails/SMS/push
+   ├─ Abandoned cart recovery
+   ├─ Post-purchase follow-up
+   └─ Loyalty programs
+2. Personalizzazione Dinamica
+2.1 Contenuti Segment-Aware
+Componente	Implementazione	Esempio d'uso
+Banner hero	Template hook che controlla SegmentManager->isCustomerInSegment()	VIP vedono banner "Accesso anticipato", nuovi clienti vedono "Benvenuto sconto 10%"
+Blocchi prodotto	Widget che filtra per segment_eligibility	"Solo per membri Premium" nascosto ai clienti base
+Navigation menu	Voci dinamiche basate su segmento	Link "Area VIP" visibile solo a segmento high-value
+CTA buttons	Testi/colori diversi per segmento	"Acquista ora" vs "Richiedi preventivo" per B2B
+2.2 Pricing Dinamico
+php
+// Hook in product/product controller
+if ($this->registry->has('mas_segment_manager')) {
+    $segmentManager = $this->registry->get('mas_segment_manager');
+    $customerSegments = $segmentManager->getCustomerSegments($customer_id);
+    
+    foreach ($customerSegments as $segment) {
+        if ($segment['code'] === 'vip_customers') {
+            $data['special'] = $data['price'] * 0.9; // 10% sconto VIP
+        }
+    }
+}
+2.3 Raccomandazioni Personalizzate
+AI-powered suggestions: AiGateway->dispatch('recommendation', {...}) per cross-sell/up-sell.
+
+Behavioral targeting: Prodotti basati su cronologia, categoria preferita, brand affinity.
+
+Segment-based collections: "Consigliati per te" diversi per ogni segmento.
+
+3. Privacy & Consent Management
+3.1 Consent Collection Points
+Momento	Consensi richiesti	UI/UX
+Registrazione	Marketing email, profilazione, analytics	Checkbox con link a privacy policy
+Newsletter signup	Email marketing, segmentazione	Modal con spiegazione benefici
+Checkout	SMS ordini, email promozionali	Step dedicato pre-pagamento
+Download risorse	Lead nurturing, content marketing	Gate form con opt-in chiaro
+Cookie banner	Analytics, remarketing	Banner sticky con granularità
+3.2 Preference Center (/account/preferences)
+text
+┌─ Preferenze Privacy ─────────────────────────┐
+│ ✓ Email marketing                            │
+│   Ricevi offerte e novità via email         │
+│                                              │
+│ ✗ SMS promozionali                          │
+│   Notifiche push per sconti flash           │
+│                                              │
+│ ✓ Profilazione comportamentale              │
+│   Personalizzazione esperienza shopping     │
+│                                              │
+│ [Salva Preferenze] [Scarica i miei dati]    │
+└──────────────────────────────────────────────┘
+3.3 Trasparenza Algoritmica
+php
+// In product listing
+if ($customer_segment === 'frequent_buyers') {
+    echo '<small class="segment-explain">
+        💡 Vedi questi prodotti perché sei un cliente fedele
+    </small>';
+}
+4. Customer Journey Tracking
+4.1 Event Emission (JavaScript)
+javascript
+// mas-tracker.js
+class MasTracker {
+    track(event, data) {
+        fetch('/catalog/mas/track', {
+            method: 'POST',
+            body: JSON.stringify({
+                event: event,
+                data: data,
+                timestamp: Date.now(),
+                session_id: this.getSessionId()
+            })
+        });
+    }
+    
+    // Esempi
+    trackPageView(category) { this.track('page_view', {category}); }
+    trackAddToCart(product_id) { this.track('add_to_cart', {product_id}); }
+    trackSearch(query) { this.track('search', {query}); }
+}
+4.2 Behavior Analysis (Server-side)
+php
+// catalog/controller/mas/tracker.php
+public function index() {
+    $event = json_decode($this->request->getPost('event'));
+    
+    // Emit to EventDispatcher
+    if ($this->registry->has('mas_event_dispatcher')) {
+        $dispatcher = $this->registry->get('mas_event_dispatcher');
+        $dispatcher->dispatch(new Event($event['event'], $event['data']));
+    }
+    
+    // Update customer behavior profile
+    $this->updateBehaviorProfile($event);
+}
+4.3 Real-time Segmentation Triggers
+Evento	Trigger workflow	Azione automatica
+Abbandono carrello > 30 min	cart.abandoned	Email recovery dopo 1h
+Acquisto > €200	high_value_purchase	SMS ringraziamento + invito VIP
+3 visite senza acquisto	browse_without_buy	Pop-up sconto 5%
+Prodotto wishlist torna disponibile	product.back_in_stock	Email + push notification
+5. Self-Service Portal
+5.1 Activity Timeline (/account/activity)
+text
+┌─ La tua Attività ─────────────────────────────┐
+│ 📧 22/07/25 - Email "Offerta Flash" inviata  │
+│ 🛒 21/07/25 - Ordine #1234 completato        │
+│ 👁️  20/07/25 - Visualizzato "Prodotto XYZ"    │
+│ ✅ 19/07/25 - Consenso marketing aggiornato   │
+│ 🎯 18/07/25 - Aggiunto a segmento "VIP"      │
+│                                               │
+│ [Scarica cronologia completa (GDPR)]         │
+└───────────────────────────────────────────────┘
+5.2 Segment Transparency
+php
+// In account dashboard
+$segments = $this->registry->get('mas_segment_manager')
+    ->getCustomerSegments($this->customer->getId());
+
+foreach ($segments as $segment) {
+    echo "<div class='segment-badge'>";
+    echo "<span class='badge'>{$segment['name']}</span>";
+    echo "<small>{$segment['description']}</small>";
+    echo "<details><summary>Perché sono in questo segmento?</summary>";
+    echo "<p>{$segment['explanation']}</p>";
+    echo "</details>";
+    echo "</div>";
+}
+5.3 Communication Preferences Management
+text
+┌─ Preferenze Comunicazione ───────────────────┐
+│ Email: ○ Mai  ●  Solo importanti  ○ Tutte    │
+│ SMS:   ● Mai  ○  Solo ordini      ○ Tutte    │  
+│ Push:  ○ Mai  ○  Solo sconti      ● Tutte    │
+│                                               │
+│ Frequenza: ○ Daily ● Weekly ○ Monthly        │
+│ Lingua: [Italiano ▼]                         │
+│                                               │
+│ [Salva] [Annulla iscrizioni massive]         │  
+└───────────────────────────────────────────────┘
+6. Automated Communications
+6.1 Triggered Email Sequences
+Trigger	Sequenza	Timing
+Registrazione	Welcome series (3 email)	0h, 24h, 72h
+Primo acquisto	Onboarding + cross-sell	1h, 3d, 7d
+Carrello abbandonato	Recovery sequence	30m, 2h, 24h
+Post-acquisto	Thank you + review request	1h, 5d, 15d
+Compleanno	Birthday offer	-3d, 0d, +7d
+Inattività	Win-back campaign	30d, 60d, 90d
+6.2 Real-time Notifications
+javascript
+// Implementazione WebSocket per notifiche live
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw-mas.js').then(function(reg) {
+        // Subscribe to push notifications
+        return reg.pushManager.subscribe({...});
+    }).then(function(subscription) {
+        // Send subscription to backend
+        fetch('/catalog/mas/push/subscribe', {
+            method: 'POST',
+            body: JSON.stringify(subscription)
+        });
+    });
+}
+6.3 Smart Cart Recovery
+php
+// Hook in checkout/checkout controller
+if ($cart_abandoned_time > 1800) { // 30 minuti
+    $this->registry->get('mas_message_gateway')->sendEmail([
+        'to' => $customer_email,
+        'template_id' => 'cart_recovery',
+        'template_data' => [
+            'cart_items' => $cart_contents,
+            'recovery_url' => $this->url->link('checkout/cart', '&recovery_token=' . $token),
+            'discount_code' => $this->generateDiscountCode($customer_id)
+        ]
+    ]);
+}
+7. Loyalty & Gamification
+7.1 Dynamic Loyalty Tiers
+php
+// customer/account controller addition
+$loyaltyTier = $this->registry->get('mas_segment_manager')
+    ->getLoyaltyTier($customer_id);
+
+$data['loyalty'] = [
+    'current_tier' => $loyaltyTier['name'],
+    'points' => $loyaltyTier['points'],
+    'next_tier' => $loyaltyTier['next_tier'],
+    'points_needed' => $loyaltyTier['points_needed'],
+    'benefits' => $loyaltyTier['benefits']
+];
+7.2 Behavioral Badges
+Badge	Criterio	Benefit
+🏆 Early Adopter	Primo 100 ad acquistare nuovo prodotto	Accesso anticipato lanci
+📝 Super Reviewer	10+ recensioni pubblicate	Prodotti gratis per test
+🎯 Brand Ambassador	5+ referral convertiti	Commissione 5%
+💎 Diamond Member	€5000+ spesi lifetime	Spedizione gratis sempre
+8. Mobile-First Experience
+8.1 Progressive Web App Features
+json
+// manifest.json MAS additions
+{
+  "background_sync": ["cart_recovery", "order_updates"],
+  "push_messaging": {
+    "gcm_sender_id": "1234567890"
+  },
+  "offline_fallback": "/offline-catalog"
+}
+8.2 Native App Integration
+php
+// API endpoints for mobile app
+// GET /api/mas/customer/segments
+// GET /api/mas/customer/preferences  
+// POST /api/mas/events/track
+// GET /api/mas/recommendations
+9. Performance & SEO
+9.1 Caching Strategy
+Elemento	Cache Type	TTL	Invalidazione
+Segment membership	Redis	15m	Trigger su materializzazione
+Product recommendations	Memcache	1h	Trigger su acquisto
+Personalized content	ESI/Varnish	5m	Event-driven purge
+Consent status	Session	Session	Trigger su opt-in/out
+9.2 SEO Considerations
+php
+// Evitare personalizzazione che impatti SEO
+if ($this->isCrawler()) {
+    $show_personalized = false; // Mostra versione default
+} else {
+    $show_personalized = $this->isCustomerSegmented();
+}
+10. Analytics & Measurement
+10.1 Enhanced Ecommerce Tracking
+javascript
+// Google Analytics 4 + Adobe Analytics
+gtag('event', 'mas_segment_view', {
+    'segment_name': 'vip_customers',
+    'customer_tier': 'gold',
+    'personalization_active': true
+});
+10.2 A/B Test Framework
+php
+// Split test controller
+$experiment = $this->registry->get('mas_segment_manager')
+    ->getActiveExperiment($customer_id, 'homepage_banner');
+
+if ($experiment['variant'] === 'b') {
+    $data['banner_text'] = 'Scopri le novità'; // Variant B
+} else {
+    $data['banner_text'] = 'Sconti fino al 50%'; // Control A
+}
+11. Accessibility & Compliance
+11.1 WCAG 2.1 AA Compliance
+Consenso forms: Label esplicite, keyboard navigation, screen reader friendly.
+
+Personalized content: Alternative text per immagini dinamiche.
+
+Contrast ratio: Mantenimento standard anche con temi personalizzati.
+
+11.2 GDPR Technical Implementation
+php
+// Data portability controller
+public function downloadMyData() {
+    $customer_id = $this->customer->getId();
+    
+    $data = [
+        'personal_info' => $this->getPersonalInfo($customer_id),
+        'order_history' => $this->getOrderHistory($customer_id),
+        'consent_history' => $this->registry->get('mas_consent_manager')
+            ->customerConsents($customer_id),
+        'segment_history' => $this->getSegmentHistory($customer_id),
+        'communication_log' => $this->getCommunicationLog($customer_id)
+    ];
+    
+    $zip = $this->createZipArchive($data);
+    $this->response->setOutput($zip);
+}
+12. Integration Points con Backend
+Frontend Component	Backend Service	API Call Example
+Segment-aware content	SegmentManager	$segmentManager->isCustomerInSegment($id, 'vip')
+Consent forms	ConsentManager	$consentManager->recordConsent($id, 'marketing', $meta)
+Event tracking	EventDispatcher	$dispatcher->dispatch(new Event('page_view', $data))
+Personalized recommendations	AiGateway	$aiGateway->dispatch('recommendation', $payload)
+Communication preferences	MessageGateway	$msgGateway->updatePreferences($id, $prefs)
+Activity timeline	AuditLogger	$audit->getCustomerActivity($id, '30d')
+Data export	Multiple services	$gdprExporter->generateCustomerDataPackage($id)
+13. Roadmap Implementazione Catalog
+Sprint	Deliverable	Complessità	Prerequisiti Backend
+C-01	Event tracking JS + endpoint	🟡 Media	EventDispatcher
+C-02	Consent forms + preference center	🟢 Bassa	ConsentManager
+C-03	Segment-aware content + pricing	🔴 Alta	SegmentManager API
+C-04	Activity timeline + GDPR export	🟡 Media	AuditLogger, Multi-service
+C-05	Cart recovery + triggered emails	🔴 Alta	MessageGateway, WorkflowEngine
+C-06	AI recommendations + A/B testing	🔴 Alta	AiGateway, ExperimentFramework
+C-07	Mobile PWA + push notifications	🟡 Media	MessageGateway push provider
+C-08	Loyalty program + gamification	🟡 Media	SegmentManager, BadgeSystem
+14. Conclusione
+Il catalog MAS trasforma l'esperienza di acquisto da generica a iper-personalizzata, mantenendo:
+
+✅ Trasparenza: Il cliente sa sempre perché vede certi contenuti
+✅ Controllo: Gestione granulare delle preferenze e della privacy
+✅ Performance: Caching intelligente e progressive loading
+✅ Compliance: GDPR/CCPA ready con self-service completo
+✅ Scalability: Architettura headless per omnicanalità
+✅ Measurability: Tracking completo del customer journey
+
+Ogni funzionalità è progettata per essere:
+
+Modulare: Attivabile/disattivabile per store
+
+A/B testabile: Per ottimizzazione continua
+
+Mobile-first: Responsive e PWA ready
+
+SEO-safe: Non impatta crawling e indicizzazione
+
+Con questa specifica, il team frontend ha una roadmap chiara per implementare un'esperienza cliente di nuova generazione, completamente integrata con i servizi backend MAS già sviluppati.

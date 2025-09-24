@@ -1,0 +1,265 @@
+Implementation-Guide: MAS Services & Gateways
+Sintesi immediata
+Gli AI/Message/Payment Gateway centralizzano la comunicazione con più provider (OpenAI, Stripe, SMTP…), applicano caching, fallback e metrica. I Service (es. OpenAISuggester) incapsulano una singola logica specialistica e si appoggiano ai gateway per fare chiamate esterne. Sotto trovi lo schema dettagliato di progettazione, naming, dipendenze, skeleton di codice e checklist di qualità.
+
+1. Architettura MAS
+Layer | Scopo | File di base | Chi lo usa
+Provider | Driver “a basso livello” che parla con l’API esterna | system/library/mas/ai/OpenAiProvider.php | Gateway
+Gateway	| Punto unico per categoria di provider (AI, Message, Payment, …) con fallback/cache/metriche | services/ai/AiGateway.php, services/message/MessageGateway.php | Action Node, Suggestor, ecc.
+Service (Suggestor/Helper) | Logica applicativa che usa il gateway per svolgere un compito di alto livello | services/ai/OpenAISuggester.php | SegmentManager o Workflow
+Action/Node | Oggetto del workflow che chiama un service o direttamente il gateway | workflow/actions/SendEmailAction.php | Workflow Engine
+
+2. Regole di naming & filesystem
+text
+system/
+ └─ library/
+     └─ mas/
+         ├─ abstractProvider.php
+         ├─ providerManager.php
+         ├─ services/
+         │   ├─ ai/
+         │   │   ├─ AiGateway.php
+         │   │   └─ OpenAISuggester.php
+         │   ├─ message/
+         │   │   ├─ MessageGateway.php
+         │   │   └─ [service]
+         │   ├─ payment/
+         │   │   ├─ PaymentGateway.php
+         │   │   └─ [service]
+         │   └─ ...
+         └─ providers/        (solo provider “low-level”)
+	     ├─ ai/           
+             │   ├─ ...
+             │   └─ [provider]
+	     ├─ email/           
+             │   ├─ ...
+             │   └─ [provider]
+	     ├─ push/           
+             │   ├─ ...
+             │   └─ [provider]
+	     ├─ sms/           
+             │   ├─ ...
+             │   └─ [provider]
+             └─ …
+
+- Gateway folder = plural category (ai, message, payment).
+- Suggeritori/Service = nome provider + suffisso funzionale (OpenAISuggester, StripePaymentHelper).
+
+3. Dipendenze core
+- ServiceContainer – DI centralizzato, già presente in MAS.
+- ProviderManager – risolve i provider ($container->get('mas.provider_manager')).
+- Cache, Log, DB, Config – recuperati dal Registry.
+- Interfacce:
+  - AiSuggestorInterface (metodi: suggest(), validate(), serializzazione).
+  - AiProviderInterface (metodo: send(string $type, array $payload)).
+
+Analoghe per MessageProviderInterface, PaymentProviderInterface.
+
+4. Creare un Gateway
+4.1 Responsabilità
+- Discover provider compatibili (filesystem o ProviderManager con tag category).
+- Selezionare provider migliore per una capability (chat, sendMail, capture…).
+- Caching delle risposte idempotenti (chiave deterministica).
+- Retry + exponential back-off.
+- Fallback‐chain e circuit breaker.
+- Rate-limit di protezione e metrics (avg RTT, success rate).
+- Logging di request/response in unico formato.
+
+4.2 Skeleton minimo
+php
+class AiGateway
+{
+    /* ==== injected ==== */
+    protected ServiceContainer $c;
+    protected Cache  $cache;
+    protected Log    $log;
+
+    /* ==== runtime ==== */
+    private array $providers   = [];   // meta
+    private array $instances   = [];   // singleton driver cache
+    private string $default    = 'openai';
+    private array  $fallback   = [
+        'chat'       => ['openai','anthropic','local_ml'],
+        'embedding'  => ['openai','local_ml']
+    ];
+    private bool   $cacheOn    = true;
+    private int    $ttl        = 3600;
+
+    public function __construct(ServiceContainer $c)
+    {
+        $this->c     = $c;
+        $this->cache = $c->get('cache');
+        $this->log   = $c->get('log');
+        $this->discover();
+    }
+
+    /* ------------- PUBLIC API -------------- */
+    public function chat(string $prompt, array $opt=[]): array
+    {
+        return $this->dispatch('chat', ['prompt'=>$prompt]+$opt);
+    }
+
+    public function dispatch(string $type, array $payload, ?string $provider=null): array
+    {
+        $code = $provider ?: $this->select($type);
+        $drv  = $this->driver($code);
+
+        $ckey = $this->fingerprint($code,$type,$payload);
+        if ($this->cacheOn && $hit=$this->cache->get($ckey))
+            return $hit;
+
+        try{
+            $out = $drv->send($type,$payload) + ['provider'=>$code];
+            if($this->cacheOn) $this->cache->set($ckey,$out,$this->ttl);
+            return $out;
+        }catch(ProviderException $e){
+            $this->log->write("Gateway fail {$code}: ".$e->getMessage());
+            $next = $this->next($type,$code);
+            if($next) return $this->dispatch($type,$payload,$next);
+            throw $e;
+        }
+    }
+
+    /* ------------- INTERNAL -------------- */
+    private function discover(): void
+    {
+        $pm = $this->c->get('mas.provider_manager');
+        foreach($pm->list() as $code=>$meta)
+            if(($meta['category']??'')==='ai') $this->providers[$code]=$meta;
+    }
+
+    private function driver(string $code)
+    {
+        return $this->instances[$code]
+            ?? $this->instances[$code]=$this->c->get('mas.provider_manager')->get($code);
+    }
+
+    private function select(string $type): string
+    {
+        foreach($this->fallback[$type]??[$this->default] as $c)
+            if(isset($this->providers[$c])) return $c;
+        return array_key_first($this->providers);
+    }
+
+    private function next(string $type,string $failed): ?string
+    {
+        $arr = $this->fallback[$type]??[];
+        $i   = array_search($failed,$arr,true);
+        return $i!==false && isset($arr[$i+1]) ? $arr[$i+1] : null;
+    }
+
+    private function fingerprint(string $p,string $t,array $pay): string
+    {
+        return 'ai_'.$p.'_'.$t.'_'.md5(json_encode($pay));
+    }
+}
+
+4.3 Best practice
+Tema | Indicazioni operative
+Cache | Solo per richieste idempotenti (prompt completo uguale) o GET; non cache immagini se dimensioni > 100 kB.
+Retry | 3 tentativi; back-off esponenziale sleep(2**(attempt-1)). Non ritentare su 4xx auth/quota.
+Circuit breaker | Se 5 errori consecutivi ⇒ stop 5 min; poi “half-open” con 1 test request.
+Metriche | Salvare in tabella mas_provider_metrics (provider_code, type, rtt_ms, success).
+Configurazione | Tutto in mas_config['ai_gateway']. Gateway NON deve leggere env var direttamente.
+
+5. Creare un Service (es. OpenAISuggester)
+5.1 Responsabilità
+- Implementare AiSuggestorInterface (o altro specifico).
+- Offrire una singola funzionalità “alta” (p.e. segment suggestion).
+- Gestire config, validate(), suggest() + (de)serializzazione.
+- Delegare le chiamate esterne al gateway, non al provider diretto.
+- Se serve caching locale, ri-usare il gateway (che già cachea).
+
+5.2 Skeleton essenziale
+php
+class OpenAISuggester implements AiSuggestorInterface
+{
+    private AiGateway $ai;
+    private array $cfg;
+    private string $model;
+    public function __construct(ServiceContainer $c,array $cfg=[])
+    {
+        $this->ai    = $c->get('mas.ai_gateway');
+        $this->cfg   = $cfg;
+        $this->model = $cfg['model']??'gpt-4';
+    }
+
+    public static function getType(): string { return 'openai_suggester'; }
+    /* getLabel, getDescription, getConfigSchema() omessi */
+
+    public function validate(): bool
+    {
+        return $this->model!=='' && in_array($this->model,['gpt-4','gpt-3.5-turbo']);
+    }
+
+    public function suggest(array $input): array
+    {
+        if(!$this->validate())
+            throw new AiSuggestorException('Invalid cfg');
+
+        $goal = $input['goal']??'segment discovery';
+        $sample = array_slice($input['data']??[],0,10);
+
+        $resp = $this->ai->chat("
+            You are a marketing data scientist. Goal: {$goal}.
+            Customer sample JSON:\n".json_encode($sample)."\n
+            Return strictly JSON array of {id,name,description,actions[]}.
+        ",[
+            'model'=>$this->model,
+            'temperature'=>$this->cfg['temp']??0.3
+        ]);
+
+        $list = json_decode($resp['output']['choices'][0]['message']['content']??'[]',true);
+
+        return [
+            'success'=>true,
+            'provider'=>$resp['provider'],
+            'suggestion'=>$list,
+            'meta'=>$resp['meta']
+        ];
+    }
+
+    public function toArray(): array { return ['type'=>self::getType(),'config'=>$this->cfg]; }
+    public static function fromArray(array $d): self
+    { return new self(ServiceContainer::getInstance(),$d['config']??[]); }
+}
+
+5.3 Procedure di registrazione
+ServiceContainer
+
+php
+$container->set('mas.openai_suggester', new OpenAISuggester($container));
+SegmentManager suggestSegments() recupera mas.openai_suggester e chiama suggest().
+
+6. Dependency Injection & Config
+php
+// system/config/mas.php excerpt
+return [
+   'ai_gateway' => [
+       'enable_cache' => true,
+       'cache_ttl'    => 3600,
+       'default_provider' => 'openai',
+       'max_retries'  => 3
+   ],
+   'openai_suggester' => [
+       'model'       => 'gpt-4',
+       'temperature' => 0.2,
+       'max_tokens'  => 1500
+   ]
+];
+
+
+In startup.php:
+
+php
+$c->set('mas.ai_gateway',    new AiGateway($c, $c->get('config')->get('mas_config')['ai_gateway']));
+$c->set('mas.openai_suggester', new OpenAISuggester($c, $c->get('config')->get('mas_config')['openai_suggester']));
+
+
+7. Testing Strategy
+Livello | Strumento | Cosa verificare
+Unit (Gateway) | PHPUnit + Guzzle MockHandler | Selezione provider, retry, fallback, caching.
+Unit (Service) | PHPUnit + Stub AiGateway | Costruzione prompt, parsing JSON, validazione cfg.
+Integration | PHPUnit + .env sandbox keys | Round-trip reale con provider (rate-limited).
+Contract | Psalm / PHP-Stan | Interface compliance, type safety.
+Load | JMeter / Artillery | Throughput del Gateway con caching ON.

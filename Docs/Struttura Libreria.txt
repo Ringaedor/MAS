@@ -1,0 +1,81 @@
+system/library/mas/
+├── mas.php                          # Classe principale di bootstrap
+├── serviceContainer.php             # Container dependency injection
+├── exception.php                    # Sistema eccezioni specializzato
+├── config.php                       # File configurazione completa
+├── masServiceProvider.php           # Provider registrazione servizi
+│
+├── audit/
+│   └── auditLogger.php             # Sistema audit logging centralizzato
+│
+├── consent/
+│   └── consentManager.php          # Gestione consensi GDPR/privacy
+│
+├── events/
+│   ├── eventDispatcher.php        # Dispatcher eventi centralizzato
+│   └── queue.php                   # Sistema code eventi asincroni
+│
+├── helpers/
+│   ├── arrayHelper.php             # Utilità manipolazione array
+│   └── dateHelper.php              # Utilità manipolazione date/timezone
+│
+├── interfaces/
+│   ├── nodeInterface.php           # Contratto nodi workflow
+│   ├── channelProviderInterface.php # Contratto provider canali
+│   ├── aISuggestorInterface.php    # Contratto suggeritori AI
+│   └── segmentFilterInterface.php  # Contratto filtri segmentazione
+│
+├── providers/
+│   ├── abstractProvider.php        # Classe base provider
+│   ├── providerManager.php         # Manager auto-discovery provider
+│   │
+│   ├── email/
+│   │   └── smtpProvider.php        # Provider SMTP generico
+│   │
+│   ├── sms/
+│   │   └── twilioProvider.php      # Provider Twilio SMS
+│   │
+│   ├── push/
+│   │   └── oneSignalProvider.php   # Provider OneSignal push
+│   │
+│   └── ai/
+│       └── openAIProvider.php      # Provider OpenAI
+│
+├── reporting/
+│   ├── dashboardService.php        # Servizio dashboard unificato
+│   └── csvExporter.php             # Esportatore CSV report
+│
+├── segmentation/
+│   ├── segmentManager.php          # Manager segmentazione clienti
+│   ├── segmentSuggestor.php        # Motore suggerimenti AI-powered
+│   │
+│   └── filters/
+│       ├── behaviouralFilter.php   # Filtro segmentazione comportamentale
+│       ├── demographicFilter.php   # Filtro segmentazione demografica
+│       ├── rfmFilter.php           # Filtro analisi RFM
+│       └── predictiveFilter.php    # Filtro segmentazione predittiva
+│
+├── services/
+│   ├── ai/
+│   │   ├── AiGateway.php           # Gateway unificato servizi AI
+│   │   └── openAISuggester.php     # Suggeritore basato OpenAI
+│   │
+│   ├── message/
+│   │   └── MessageGateway.php      # Gateway unificato messaggistica
+│   │
+│   └── payment/
+│       └── PaymentGateway.php      # Gateway unificato pagamenti
+│
+└── workflow/
+    ├── workflowManager.php         # Manager gestione workflow
+    │
+    ├── nodes/
+    │   ├── abstractNode.php        # Classe base nodi workflow
+    │   ├── triggerNode.php         # Nodo trigger automatico
+    │   ├── actionNode.php          # Nodo azione operazioni
+    │   └── delayNode.php           # Nodo delay/attesa
+    │
+    └── actions/
+        ├── sendEmailAction.php     # Azione invio email
+        ├── sendSmsAction.php       # Azione invio SMS
+        └── customAction.php        # Azione personalizzabile

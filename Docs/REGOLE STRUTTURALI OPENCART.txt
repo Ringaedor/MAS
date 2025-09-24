@@ -1,0 +1,55 @@
+REGOLE STRUTTURALI OPENCART
+1. - Esempio Controller/Model/Language: UN SOLO FILE per sezione
+   - - segments.php - TUTTO in un controller
+   - - segments.php - TUTTO in un model
+   - - segments.php - TUTTO in un language file
+
+2. Template: PIÙ FILE funzionali per operatività
+   - Template multipli solo se funzionalmente necessari
+   - SPA Style preferito con tabs in un singolo file
+
+3. Struttura OpenCart 4.x standard
+   - Namespace corretto
+   - Pattern controller/model/view rispettato
+   - Registry access nativo
+
+4. REGOLE DI SVILUPPO
+   - "DEVI scrivere i file completi di tutto e funzionanti"
+   - "eventuali modifiche verranno apportate in seguito"
+   - "prima stesura deve essere già completa"
+   - NON FARE USO DEL COSTRUTTO TRY/CATCH
+   - MAI dare fix parziali - sempre file completo riscritto
+   - Cross-platform e mobile friendly sempre
+
+5. REGOLE GRAFICHE
+   - Elementi simmetrici e logicamente dimensionati
+   - KPI Cards sempre stessa grandezza (risolto con CSS Grid)
+   - Float-right con text-align: right (aggiunto nel CSS)
+   - Design coerente con dashboard esistente
+   - Bootstrap 4 + Font Awesome
+
+6. REGOLE ARCHITETTURALI MAS
+   - Basarsi sulla documentazione MAS esistente
+   - Utilizzare $this->mas() per accesso libreria
+   - Pattern fail-safe con null check
+   - Audit logging per tutte le azioni
+   - Permission check granulare
+   - Error handling robusto senza try/catch
+
+7. COMPORTAMENTI RICHIESTI
+   - RISCRIVERE TUTTO IL FILE corretto completo
+   - NON dare fix parziali mai
+   - NELLO SVILUPPO:
+   - - File completi e funzionanti dalla prima volta
+   - - Commentazione professionale nel codice e in inglese
+   - - Codice enterprise-ready
+   - - Validazione input robusta
+   - - AJAX endpoints completi
+   - - Nessun css nei file template
+   - - segui pedissequamente le convenzioni e direttive di Opencart 4.x per quanto riguarda struttura e codice
+   - - Voglio che usi un approccio esattamente come quello che userebbe un senior developer del team OpenCart seguendo le loro convenzioni interne per extension enterprise-level.
+
+- Continua a lavorare finché il lavoro non è completamente svolto prima di finire il tuo turno.
+- Se non sei sicuro dei file o degli elementi allegati, Aprili e non allucinare.
+- Pianifica attentamente, prima di ogni chiamata e rifletti sul risultato dopo, analizzalo, simulalo, verificalo. Solo alla fine scrivi.
+- Il lavoro dovrà essere sempre professionale, completo e, soprattutto, funzionante. NON AMETTO ERRORI.

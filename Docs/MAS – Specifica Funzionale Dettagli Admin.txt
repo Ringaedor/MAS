@@ -1,0 +1,180 @@
+MAS – Specifica Funzionale Dettagliata per il Pannello Admin
+La sezione amministrativa di MAS si integra nel backend di OpenCart come modulo “Marketing Automation Suite”.
+Di seguito sono elencate tutte le aree funzionali, con la struttura di menu, le schermate previste, i casi d’uso, i permessi e le principali chiamate API interne che dovranno essere realizzate.
+
+1. Struttura di Navigazione
+text
+Marketing Automation Suite
+├─ Dashboard
+├─ Segmenti
+│  ├─ Elenco segmenti
+│  ├─ Costruttore segmenti
+│  ├─ Suggerimenti AI
+│  └─ Log materializzazioni
+├─ Workflow
+│  ├─ Elenco workflow
+│  ├─ Editor grafico
+│  ├─ Esecuzioni
+│  └─ Libreria azioni/trigger
+├─ Messaggistica
+│  ├─ Code messaggi
+│  ├─ Provider canali
+│  ├─ Template
+│  └─ Report deliverability
+├─ Consensi & Privacy
+│  ├─ Tipi di consenso
+│  ├─ Log consensi
+│  └─ Export GDPR
+├─ Report & KPI
+│  ├─ KPI Live
+│  ├─ Serie temporali
+│  ├─ Drill-down
+│  └─ Export CSV
+├─ Audit & Sicurezza
+│  ├─ Log operazioni
+│  ├─ Utenti & ruoli
+│  └─ Archivio / Pulizia
+└─ Impostazioni
+   ├─ Generali
+   ├─ Provider AI
+   ├─ Performance & Cache
+   └─ API & Webhook
+2. Dashboard
+Funzione	Descrizione operativa	Output / Interazione
+KPI a colpo d’occhio	Revenue, ordini, AOV, CR, nuovi clienti, visitatori unici	Widget con refresh 15 min (DashboardService)
+Grafici a trend	Line/Bar per metriche selezionabili (periodo/granularità)	Chiamata AJAX → dashboard_service->getTimeSeries()
+Avvisi critici	Notifiche su errori provider, code bloccate, spike negativi	Eventi push via audit.alert
+Score segmenti principali	Top 5 segmenti per fatturato e dimensione	Query SegmentManager + DashboardService
+3. Segmenti
+3.1 Elenco Segmenti
+Griglia con nome, tipo, dimensione corrente, ultima materializzazione, stato (ok, errore).
+
+Azioni: Materializza, Duplica, Esporta CSV, Storico log, Elimina.
+
+3.2 Costruttore Segmenti
+Interfaccia drag-and-drop a colonne (Filtri → Condizioni AND/OR).
+
+Filtri disponibili:
+
+RFM (Recency, Frequency, Monetary)
+
+Comportamentali (eventi, page-view)
+
+Demografici
+
+Predictive (churn, CLV) via AI
+
+SQL avanzato (solo admin esperti)
+
+Preview dinamica (server-side debounced): chiama SegmentManager->simulate() e mostra conteggio + campione 50 clienti.
+
+Salvataggio: crea definizione e lancia SegmentManager->materialize() (queue).
+
+3.3 Suggerimenti AI
+Widget che chiama AiGateway->dispatch('chat', ...) tramite OpenAISuggester / GoogleAISuggester.
+
+Elenco di segmenti proposti con punteggio di confidenza, pulsante “Accetta” → crea segmento.
+
+3.4 Log Materializzazioni
+Tabella (segment_id, run_at, durata, clienti, esito, errore) letta da mas_segment_log.
+
+Pulsante “Riesegui”.
+
+4. Workflow
+4.1 Elenco Workflow
+Stato (attivo, in bozza, sospeso, errore), KPI rapide (esecuzioni totali, conversioni, tasso errore).
+
+4.2 Editor Grafico
+Canvas SVG: nodi (TriggerNode, ActionNode, DelayNode) con proprietà in sidebar.
+
+Salva → WorkflowManager->save() (versioning).
+
+Convalida → WorkflowManager->validate() (DAG, campi obbligatori).
+
+4.3 Esecuzioni
+Timeline verticale con execution_id, cliente, stato, durata, step errato.
+
+Dettaglio: json payload, log mas_workflow_execution_log, pulsante “Ritenta”.
+
+4.4 Libreria Azioni/Trigger
+Modal con descrizione di ciascun tipo, parametri richiesti, preview JSON di esempio.
+
+5. Messaggistica
+Vista	Elementi chiave
+Code messaggi	Tab-pane per email / SMS / push. Colonne: id, tipo, provider, tentativi, stato, errore. Azioni: “Retry”, “Annulla”, “Eliminar definitivamente”.
+Provider canali	Form di configurazione SMTP/API-key, test di connessione live, metriche (success rate, latenza).
+Template	Editor WYSIWYG + html raw, variabili merge tag ({{customer.firstname}}), versioning, preview mobile/desktop.
+Report deliverability	Percentuali di recapito, aperture, click, bounce per provider e per campagna (lettura tabelle mas_message_analytics).
+6. Consensi & Privacy
+Funzione	Dettaglio
+CRUD tipi consenso	Codice, versione, descrizione, obbligatorio sì/no, lingua, preview.
+Log consensi	Filtro per customer, IP, data; export CSV.
+Export GDPR	Innesca ConsentManager->customerConsents() + dati anagrafici, produce ZIP scaricabile.
+7. Report & KPI
+KPI Live: widget refresh 15 min (Ajax → dashboard_service->getKpiSummary()).
+
+Trend: multipicker date, granularità (ora, giorno, settimana, mese).
+
+Drill-down: click su revenue → top 10 prodotti, segmenti, canali (SQL + DashboardService).
+
+Export: CSV via CsvExporter, progress bar eventi export.progress, log sicurezza via AuditLogger.
+
+8. Audit & Sicurezza
+Log operazioni: Tabella con filtri avanzati (utente, IP, categoria, severità, full-text su context).
+
+Diff dati: per eventi data mostra JSON before / after evidenziato.
+
+Ruoli: Mappatura ruoli OpenCart → permessi MAS (segmenti, workflow, export, audit view).
+
+Archivio/Pulizia: Trigger manuale audit_logger->archiveLogs() e schermata impostazioni retention.
+
+9. Impostazioni
+Sezione	Campi principali
+Generali	Lingua default MAS, fuso orario, email di notifica, feature flag.
+Provider AI	API-key, modello default, temperatura, timeout, fallback order.
+Performance & Cache	Toggle caching, TTL segmenti, TTL AI, flush cache globale.
+API & Webhook	Token API, domini CORS, log webhook, URL di callback.
+10. Access Control (ACL)
+Permesso	Ruolo “Marketer”	Ruolo “Analyst”	Ruolo “Admin”
+Visualizzare dashboard KPI	✓	✓	✓
+Creare/Modificare segmenti	✓	(solo view)	✓
+Creare/Modificare workflow	✓	✗	✓
+Inviare broadcast / mass mailing	✓	✗	✓
+Gestire consensi	✓	✓	✓
+Esportare dati (CSV/GDPR)	✗	✓	✓
+Accedere audit log	✗	✓ (read-only)	✓ (full)
+Gestire provider canali	✗	✗	✓
+Modificare impostazioni globali	✗	✗	✓
+11. API interne (AJAX / Rest)
+Endpoint	Verbo	Payload principale	Risposta
+/admin/mas/segment/simulate	POST	{filters:[…]}	{"size":123,"sample":[…]}
+/admin/mas/workflow/save	POST	Graph JSON	{"success":true,"id":45}
+/admin/mas/message/retry	POST	{"queue_id":123}	{"queued":true}
+/admin/mas/report/kpi	GET	from,to,store,segment	KPI JSON
+/admin/mas/audit/search	GET	filtri querystring	log paginato
+/admin/mas/consent/export	GET	customer_id	file ZIP (download)
+/admin/mas/ai/suggest	POST	{goal:"...",data:[…]}	array segmenti suggeriti
+12. Roadmap di sviluppo (backend ⇄ admin)
+Sprint	Deliverable	Dipendenze backend
+S-01	Dashboard KPI + Drill-down	DashboardService, CsvExporter
+S-02	Segment builder + simulazione	SegmentManager
+S-03	Workflow editor + esecuzioni	WorkflowManager, EventQueue
+S-04	Provider channel UI + template	MessageGateway, AiGateway
+S-05	Consenso & GDPR export	ConsentManager, AuditLogger
+S-06	Audit log viewer + ruoli	AuditLogger
+S-07	Alerting & real-time dashboard	EventDispatcher, ProviderMetrics
+S-08	Integrazione frontend segment aware	SegmentManager (API catalog)
+13. Conclusione
+Questa specifica definisce tutte le funzionalità che il lato admin deve offrire per rendere operativa la Marketing Automation Suite. Ogni sezione è collegata a componenti backend già esistenti (o da completare) e include:
+
+Struttura di navigazione e schermate.
+
+Funzioni, campi e azioni che l’operatore deve avere.
+
+Permessi e ruoli.
+
+Chiamate API e dipendenze sui servizi MAS.
+
+Roadmap di sviluppo sprint-by-sprint.
+
+Con questo documento il team di sviluppo UI/UX e i developer back-end hanno una mappa chiara delle funzionalità da implementare per completare la suite sul lato amministratore.
